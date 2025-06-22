@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import RaceCard from "@/components/RaceCard";
@@ -16,16 +15,20 @@ const Index = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Mock data
+  // Mock data - updated to match Race interface
   const nextRace = {
     id: "1",
     name: "Saudi Arabian Grand Prix",
-    location: "Jeddah, Saudi Arabia",
-    date: "March 9, 2024",
-    time: "15:00 UTC",
+    location: "Jeddah",
+    country: "Saudi Arabia",
+    date: "2024-03-09",
+    time: "15:00:00",
     round: 2,
-    status: "upcoming" as const,
-    circuit: "Jeddah Corniche Circuit"
+    status: "scheduled" as const,
+    circuit: "Jeddah Corniche Circuit",
+    season: 2024,
+    weather_condition: "dry" as const,
+    is_sprint_weekend: false
   };
 
   const topDrivers = [
