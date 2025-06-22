@@ -1,28 +1,38 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, Zap } from "lucide-react";
 
 interface RaceCardProps {
   race: {
     id: string;
     name: string;
     location: string;
+    country: string;
     date: string;
     time: string;
     round: number;
-    status: "upcoming" | "live" | "completed";
+    status: "scheduled" | "practice" | "qualifying" | "race" | "completed" | "cancelled";
     circuit: string;
+    season: number;
+    weather_condition?: string;
+    is_sprint_weekend: boolean;
   };
 }
 
 const RaceCard = ({ race }: RaceCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "live":
+      case "race":
         return "bg-f1-red text-white animate-pulse-fast";
       case "completed":
         return "bg-f1-green text-white";
+      case "qualifying":
+        return "bg-f1-orange text-white";
+      case "practice":
+        return "bg-f1-yellow text-black";
+      case "cancelled":
+        return "bg-gray-500 text-white";
       default:
         return "bg-f1-orange text-white";
     }
@@ -30,13 +40,36 @@ const RaceCard = ({ race }: RaceCardProps) => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "live":
-        return "🔴 LIVE";
+      case "race":
+        return "🔴 LIVE RACE";
       case "completed":
         return "✅ FINISHED";
+      case "qualifying":
+        return "🏁 QUALIFYING";
+      case "practice":
+        return "🏎️ PRACTICE";
+      case "cancelled":
+        return "❌ CANCELLED";
       default:
         return "📅 UPCOMING";
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
   };
 
   return (
@@ -53,6 +86,12 @@ const RaceCard = ({ race }: RaceCardProps) => {
               <Badge className={getStatusColor(race.status)}>
                 {getStatusText(race.status)}
               </Badge>
+              {race.is_sprint_weekend && (
+                <Badge variant="outline" className="text-f1-yellow border-f1-yellow">
+                  <Zap className="w-3 h-3 mr-1" />
+                  SPRINT
+                </Badge>
+              )}
             </div>
             <CardTitle className="racing-text text-lg group-hover:text-f1-red transition-colors">
               {race.name}
@@ -64,25 +103,34 @@ const RaceCard = ({ race }: RaceCardProps) => {
       <CardContent className="relative space-y-4">
         <div className="flex items-center space-x-2 text-muted-foreground">
           <MapPin className="w-4 h-4" />
-          <span className="text-sm">{race.location}</span>
+          <span className="text-sm">{race.location}, {race.country}</span>
         </div>
         
         <div className="flex items-center space-x-2 text-muted-foreground">
           <Calendar className="w-4 h-4" />
-          <span className="text-sm">{race.date}</span>
+          <span className="text-sm">{formatDate(race.date)}</span>
         </div>
         
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <Clock className="w-4 h-4" />
-          <span className="text-sm">{race.time}</span>
-        </div>
+        {race.time && (
+          <div className="flex items-center space-x-2 text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span className="text-sm">{formatTime(race.time)}</span>
+          </div>
+        )}
 
         <div className="pt-2">
           <p className="text-xs text-muted-foreground mb-2">Circuit</p>
           <p className="text-sm font-medium">{race.circuit}</p>
         </div>
 
-        {race.status === "live" && (
+        {race.weather_condition && (
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground mb-1">Weather</p>
+            <p className="text-sm font-medium capitalize">{race.weather_condition}</p>
+          </div>
+        )}
+
+        {race.status === "race" && (
           <div className="racing-track relative h-1 bg-gradient-to-r from-f1-red via-f1-orange to-f1-yellow rounded-full mt-4" />
         )}
       </CardContent>

@@ -1,88 +1,19 @@
+
 import Header from "@/components/Header";
 import RaceCard from "@/components/RaceCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Calendar } from "lucide-react";
-
-type Race = {
-  id: string;
-  name: string;
-  location: string;
-  date: string;
-  time: string;
-  round: number;
-  status: "upcoming" | "live" | "completed";
-  circuit: string;
-};
+import { Calendar, Loader2 } from "lucide-react";
+import { useRaces, Race } from "@/hooks/useRaces";
 
 const Races = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("round");
-
-  const races: Race[] = [
-    {
-      id: "1",
-      name: "Bahrain Grand Prix",
-      location: "Sakhir, Bahrain",
-      date: "March 2, 2024",
-      time: "15:00 UTC",
-      round: 1,
-      status: "completed" as const,
-      circuit: "Bahrain International Circuit"
-    },
-    {
-      id: "2",
-      name: "Saudi Arabian Grand Prix",
-      location: "Jeddah, Saudi Arabia",
-      date: "March 9, 2024",
-      time: "15:00 UTC",
-      round: 2,
-      status: "live" as const,
-      circuit: "Jeddah Corniche Circuit"
-    },
-    {
-      id: "3",
-      name: "Australian Grand Prix",
-      location: "Melbourne, Australia",
-      date: "March 24, 2024",
-      time: "05:00 UTC",
-      round: 3,
-      status: "upcoming" as const,
-      circuit: "Albert Park Circuit"
-    },
-    {
-      id: "4",
-      name: "Japanese Grand Prix",
-      location: "Suzuka, Japan",
-      date: "April 7, 2024",
-      time: "05:00 UTC",
-      round: 4,
-      status: "upcoming" as const,
-      circuit: "Suzuka International Racing Course"
-    },
-    {
-      id: "5",
-      name: "Chinese Grand Prix",
-      location: "Shanghai, China",
-      date: "April 21, 2024",
-      time: "07:00 UTC",
-      round: 5,
-      status: "upcoming" as const,
-      circuit: "Shanghai International Circuit"
-    },
-    {
-      id: "6",
-      name: "Miami Grand Prix",
-      location: "Miami, USA",
-      date: "May 5, 2024",
-      time: "19:30 UTC",
-      round: 6,
-      status: "upcoming" as const,
-      circuit: "Miami International Autodrome"
-    }
-  ];
+  const [selectedSeason, setSelectedSeason] = useState("2024");
+  
+  const { data: races = [], isLoading, error } = useRaces(parseInt(selectedSeason));
 
   const filterRacesByStatus = (status: string): Race[] => {
     if (status === "all") return races;
@@ -109,6 +40,20 @@ const Races = () => {
         }
       });
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Error Loading Races</h2>
+          <p className="text-muted-foreground">
+            Unable to load race data. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -127,7 +72,7 @@ const Races = () => {
               Race Calendar
             </h1>
             <p className="text-xl text-muted-foreground">
-              2024 Formula 1 Season Schedule
+              {selectedSeason} Formula 1 Season Schedule
             </p>
           </div>
         </div>
@@ -136,7 +81,17 @@ const Races = () => {
       {/* Filters */}
       <section className="py-8 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4 max-w-2xl">
+          <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
+            <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+              <SelectTrigger className="w-full md:w-32">
+                <SelectValue placeholder="Season" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
             <Input
               placeholder="Search races, locations, or circuits..."
               value={searchTerm}
@@ -158,51 +113,94 @@ const Races = () => {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <section className="py-12">
+          <div className="container mx-auto px-4 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading race calendar...</p>
+          </div>
+        </section>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && races.length === 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4 text-center">
+            <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Races Found</h3>
+            <p className="text-muted-foreground">
+              No races are scheduled for the {selectedSeason} season yet.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Race Tabs */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 max-w-md mx-auto mb-8">
-              <TabsTrigger value="all">All Races</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="live">Live</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRaces(races).map((race) => (
-                  <RaceCard key={race.id} race={race} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="completed">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRaces(filterRacesByStatus("completed")).map((race) => (
-                  <RaceCard key={race.id} race={race} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="live">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRaces(filterRacesByStatus("live")).map((race) => (
-                  <RaceCard key={race.id} race={race} />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="upcoming">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredRaces(filterRacesByStatus("upcoming")).map((race) => (
-                  <RaceCard key={race.id} race={race} />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+      {!isLoading && races.length > 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-6 max-w-2xl mx-auto mb-8">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+                <TabsTrigger value="race">Live</TabsTrigger>
+                <TabsTrigger value="qualifying">Qualifying</TabsTrigger>
+                <TabsTrigger value="practice">Practice</TabsTrigger>
+                <TabsTrigger value="scheduled">Upcoming</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(races).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="completed">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(filterRacesByStatus("completed")).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="race">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(filterRacesByStatus("race")).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="qualifying">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(filterRacesByStatus("qualifying")).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="practice">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(filterRacesByStatus("practice")).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="scheduled">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRaces(filterRacesByStatus("scheduled")).map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
