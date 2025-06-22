@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// F1 Racing Colors
+				f1: {
+					red: '#DC143C', // Ferrari Red
+					orange: '#FF6600', // McLaren Orange
+					silver: '#C0C0C0', // Mercedes Silver
+					green: '#00A693', // Aston Martin Green
+					blue: '#001F5B', // Red Bull Navy
+					yellow: '#FFD700', // Racing Yellow
+					black: '#1A1A1A', // Racing Black
+					white: '#FFFFFF',
 				}
 			},
 			borderRadius: {
@@ -84,11 +96,31 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'race-line': {
+					'0%': { transform: 'translateX(-100%)' },
+					'100%': { transform: 'translateX(100vw)' }
+				},
+				'speed-blur': {
+					'0%, 100%': { transform: 'translateX(0px)' },
+					'50%': { transform: 'translateX(4px)' }
+				},
+				'pulse-fast': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'race-line': 'race-line 2s linear infinite',
+				'speed-blur': 'speed-blur 0.3s ease-in-out',
+				'pulse-fast': 'pulse-fast 1s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'racing-gradient': 'linear-gradient(135deg, #DC143C 0%, #FF6600 50%, #FFD700 100%)',
+				'track-gradient': 'linear-gradient(to right, #1A1A1A 0%, #333333 50%, #1A1A1A 100%)',
+				'speed-gradient': 'linear-gradient(45deg, #DC143C, #FF6600)',
 			}
 		}
 	},
