@@ -1,4 +1,3 @@
-
 import Header from "@/components/Header";
 import RaceCard from "@/components/RaceCard";
 import { Input } from "@/components/ui/input";
@@ -7,11 +6,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Calendar } from "lucide-react";
 
+type Race = {
+  id: string;
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  round: number;
+  status: "upcoming" | "live" | "completed";
+  circuit: string;
+};
+
 const Races = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("round");
 
-  const races = [
+  const races: Race[] = [
     {
       id: "1",
       name: "Bahrain Grand Prix",
@@ -74,13 +84,13 @@ const Races = () => {
     }
   ];
 
-  const filterRacesByStatus = (status: string) => {
+  const filterRacesByStatus = (status: string): Race[] => {
     if (status === "all") return races;
     return races.filter(race => race.status === status);
   };
 
-  const filteredRaces = (races: typeof races) => 
-    races
+  const filteredRaces = (raceList: Race[]): Race[] => 
+    raceList
       .filter(race => 
         race.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         race.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
