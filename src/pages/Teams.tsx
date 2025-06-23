@@ -3,11 +3,13 @@ import TeamCard from "@/components/TeamCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { Users } from "lucide-react";
+import { users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
+  const navigate = useNavigate();
 
   const teams = [
     {
@@ -92,6 +94,10 @@ const Teams = () => {
       }
     });
 
+  const handleTeamClick = (teamId: string) => {
+    navigate(`/teams/${teamId}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header */}
@@ -102,7 +108,7 @@ const Teams = () => {
         <div className="container mx-auto px-4 relative">
           <div className="text-center space-y-4">
             <div className="flex justify-center mb-6">
-              <Users className="w-16 h-16 text-f1-orange" />
+              <users className="w-16 h-16 text-f1-orange" />
             </div>
             <h1 className="racing-text text-4xl md:text-6xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
               Constructor Standings
@@ -145,7 +151,9 @@ const Teams = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTeams.map((team) => (
-              <TeamCard key={team.id} team={team} />
+              <div key={team.id} onClick={() => handleTeamClick(team.id)} className="cursor-pointer">
+                <TeamCard team={team} />
+              </div>
             ))}
           </div>
         </div>

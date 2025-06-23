@@ -13,6 +13,8 @@ import LiveRace from "./pages/LiveRace";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import DriverProfile from "./pages/DriverProfile";
+import TeamProfile from "./pages/TeamProfile";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/drivers" element={<Drivers />} />
+          <Route path="/drivers/:driverId" element={<DriverProfile />} />
           <Route path="/teams" element={<Teams />} />
+          <Route path="/teams/:teamId" element={<TeamProfile />} />
           <Route path="/races" element={<Races />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/live/:raceId" element={<LiveRace />} />
