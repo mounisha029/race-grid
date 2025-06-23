@@ -14,7 +14,7 @@ import {
   Timer,
   Play,
   Pause,
-  Stop
+  CircleStop
 } from "lucide-react";
 import { useLiveTiming } from "@/hooks/useLiveTiming";
 import { useF1LiveUpdates } from "@/hooks/useWebSocket";
