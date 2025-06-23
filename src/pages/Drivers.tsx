@@ -4,12 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Trophy } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const Drivers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
-  const navigate = useNavigate();
 
   const drivers = [
     {
@@ -105,10 +103,6 @@ const Drivers = () => {
       }
     });
 
-  const handleDriverClick = (driverId: string) => {
-    navigate(`/drivers/${driverId}`);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header */}
@@ -161,9 +155,7 @@ const Drivers = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDrivers.map((driver) => (
-              <div key={driver.id} onClick={() => handleDriverClick(driver.id)} className="cursor-pointer">
-                <DriverCard driver={driver} />
-              </div>
+              <DriverCard key={driver.id} driver={driver} />
             ))}
           </div>
         </div>

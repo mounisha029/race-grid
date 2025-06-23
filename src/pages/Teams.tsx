@@ -4,12 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
-  const navigate = useNavigate();
 
   const teams = [
     {
@@ -94,10 +92,6 @@ const Teams = () => {
       }
     });
 
-  const handleTeamClick = (teamId: string) => {
-    navigate(`/teams/${teamId}`);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Header */}
@@ -151,9 +145,7 @@ const Teams = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTeams.map((team) => (
-              <div key={team.id} onClick={() => handleTeamClick(team.id)} className="cursor-pointer">
-                <TeamCard team={team} />
-              </div>
+              <TeamCard key={team.id} team={team} />
             ))}
           </div>
         </div>
