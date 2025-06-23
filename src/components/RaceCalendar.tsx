@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -397,7 +396,7 @@ const RaceCalendar = () => {
                         <h3 className="font-medium text-sm">{race.name}</h3>
                         <p className="text-xs text-muted-foreground">{nextSession.name}</p>
                       </div>
-                      <Badge className={getStatusColor(status)} size="sm">
+                      <Badge className={`${getStatusColor(status)} text-xs`}>
                         {status.toUpperCase()}
                       </Badge>
                     </div>

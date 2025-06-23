@@ -1,3 +1,4 @@
+
 import {
   Home,
   LayoutDashboard,
@@ -11,7 +12,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 
 const Sidebar = () => {
   const location = useLocation();
-  const { isOpen, toggleSidebar } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
 
   const navigationItems = [
     { href: "/", label: "Dashboard", icon: Home },
@@ -24,7 +25,7 @@ const Sidebar = () => {
   return (
     <aside
       className={`
-        ${isOpen ? 'w-64' : 'w-20'}
+        ${open ? 'w-64' : 'w-20'}
         flex flex-col bg-secondary border-r border-r-muted
         duration-300 transition-all
         h-screen sticky top-0
@@ -33,7 +34,7 @@ const Sidebar = () => {
       <div className="flex-1 flex flex-col gap-2 p-4">
         <NavLink to="/" className="font-bold text-lg flex items-center gap-2">
           <LayoutDashboard className="w-6 h-6" />
-          <span className={`${isOpen ? 'block' : 'hidden'}`}>
+          <span className={`${open ? 'block' : 'hidden'}`}>
             F1 Dashboard
           </span>
         </NavLink>
@@ -51,7 +52,7 @@ const Sidebar = () => {
                   `}
                 >
                   <item.icon className="w-4 h-4" />
-                  <span className={`${isOpen ? 'block' : 'hidden'}`}>
+                  <span className={`${open ? 'block' : 'hidden'}`}>
                     {item.label}
                   </span>
                 </NavLink>
@@ -67,7 +68,7 @@ const Sidebar = () => {
           className="flex items-center gap-3 p-2 rounded-md hover:bg-muted text-muted-foreground"
         >
           <Settings className="w-4 h-4" />
-          <span className={`${isOpen ? 'block' : 'hidden'}`}>
+          <span className={`${open ? 'block' : 'hidden'}`}>
             Settings
           </span>
         </NavLink>
