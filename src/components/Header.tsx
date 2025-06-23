@@ -3,9 +3,35 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { Calendar, Trophy, Users, Flag } from "lucide-react";
+import { 
+  Calendar, 
+  Trophy, 
+  Users, 
+  Flag, 
+  Search, 
+  Menu, 
+  Sun, 
+  Moon, 
+  UserCircle,
+  Settings,
+  LogOut,
+  Radio
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import LiveRaceIndicator from "./LiveRaceIndicator";
 
-const Header = () => {
+interface HeaderProps {
+  onSearchClick: () => void;
+}
+
+const Header = ({ onSearchClick }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -20,15 +46,21 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <NavLink to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-racing-gradient rounded-full flex items-center justify-center">
-              <Flag className="w-4 h-4 text-white" />
-            </div>
-            <span className="racing-text text-xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
-              F1 Box Box
-            </span>
-          </NavLink>
+          {/* Left Section - Logo and Sidebar Toggle */}
+          <div className="flex items-center space-x-4">
+            <SidebarTrigger className="md:hidden" />
+            
+            <NavLink to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-racing-gradient rounded-full flex items-center justify-center">
+                <Flag className="w-4 h-4 text-white" />
+              </div>
+              <span className="racing-text text-xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
+                F1 Box Box
+              </span>
+            </NavLink>
+
+            <LiveRaceIndicator />
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
@@ -50,38 +82,62 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Right Section - Actions */}
+          <div className="flex items-center space-x-2">
+            {/* Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSearchClick}
+              className="hidden md:flex w-9 h-9"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="w-9 h-9"
             >
-              {theme === "dark" ? "🌙" : "☀️"}
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
+
+            {/* User Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-9 h-9">
+                  <UserCircle className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem>
+                  <UserCircle className="w-4 h-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile Menu Button */}
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="hover:bg-f1-red hover:text-white hover:border-f1-red transition-colors"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              Login
+              <Menu className="w-4 h-4" />
             </Button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <div className="flex flex-col space-y-1">
-              <div className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-              <div className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
-              <div className={`w-5 h-0.5 bg-current transition-all ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
-            </div>
-          </Button>
         </div>
 
         {/* Mobile Navigation */}
@@ -105,18 +161,15 @@ const Header = () => {
                   <span>{item.name}</span>
                 </NavLink>
               ))}
-              <div className="flex items-center justify-between px-4 py-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                  {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
-                </Button>
-                <Button variant="outline" size="sm">
-                  Login
-                </Button>
-              </div>
+              
+              <Button
+                variant="ghost"
+                onClick={onSearchClick}
+                className="flex items-center space-x-2 px-4 py-3 justify-start"
+              >
+                <Search className="w-4 h-4" />
+                <span>Search</span>
+              </Button>
             </nav>
           </div>
         )}
