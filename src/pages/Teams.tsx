@@ -3,7 +3,7 @@ import TeamCard from "@/components/TeamCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Teams = () => {
@@ -108,7 +108,7 @@ const Teams = () => {
         <div className="container mx-auto px-4 relative">
           <div className="text-center space-y-4">
             <div className="flex justify-center mb-6">
-              <users className="w-16 h-16 text-f1-orange" />
+              <Users className="w-16 h-16 text-f1-orange" />
             </div>
             <h1 className="racing-text text-4xl md:text-6xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
               Constructor Standings

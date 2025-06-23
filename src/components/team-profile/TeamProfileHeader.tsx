@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, MapPin, Calendar, Share2, Heart, users } from "lucide-react";
+import { Trophy, MapPin, Calendar, Share2, Heart, Users } from "lucide-react";
 
 interface TeamProfileHeaderProps {
   team: any;

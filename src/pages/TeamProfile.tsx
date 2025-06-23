@@ -24,7 +24,7 @@ const TeamProfile = () => {
     );
   }
 
-  const team = teamsData?.teams?.find((t: any) => t.id === teamId);
+  const team = (teamsData as any)?.teams?.find((t: any) => t.id === teamId);
 
   if (!team) {
     return (

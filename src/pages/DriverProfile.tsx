@@ -24,7 +24,7 @@ const DriverProfile = () => {
     );
   }
 
-  const driver = driversData?.drivers?.find((d: any) => d.id === driverId);
+  const driver = (driversData as any)?.drivers?.find((d: any) => d.id === driverId);
 
   if (!driver) {
     return (
