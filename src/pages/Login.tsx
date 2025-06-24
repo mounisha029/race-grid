@@ -6,16 +6,78 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Flag, Mail, Lock, User } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const Login = () => {
+  const { signIn, signUp, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    displayName: ''
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 2000);
+    
+    try {
+      const { error } = await signIn(formData.email, formData.password);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Signed in successfully!",
+        });
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signUp(formData.email, formData.password, formData.displayName);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Account created successfully! Please check your email to verify your account.",
+        });
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,7 +114,7 @@ const Login = () => {
               </TabsList>
               
               <TabsContent value="login" className="space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -62,6 +124,8 @@ const Login = () => {
                         type="email"
                         placeholder="your.email@example.com"
                         className="pl-10"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                       />
                     </div>
@@ -76,6 +140,8 @@ const Login = () => {
                         type="password"
                         placeholder="••••••••"
                         className="pl-10"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
                       />
                     </div>
@@ -98,16 +164,18 @@ const Login = () => {
               </TabsContent>
               
               <TabsContent value="register" className="space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Display Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="name"
                         type="text"
-                        placeholder="Your full name"
+                        placeholder="Your display name"
                         className="pl-10"
+                        value={formData.displayName}
+                        onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                         required
                       />
                     </div>
@@ -122,6 +190,8 @@ const Login = () => {
                         type="email"
                         placeholder="your.email@example.com"
                         className="pl-10"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                       />
                     </div>
@@ -136,6 +206,8 @@ const Login = () => {
                         type="password"
                         placeholder="••••••••"
                         className="pl-10"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
                       />
                     </div>
