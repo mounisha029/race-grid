@@ -31,7 +31,7 @@ const RaceCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
   const [userTimezone, setUserTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const [selectedSeason, setSelectedSeason] = useState("2024");
+  const [selectedSeason, setSelectedSeason] = useState(() => new Date().getFullYear().toString());
   
   const { data: races = [], isLoading } = useRaces(parseInt(selectedSeason));
 
@@ -199,9 +199,9 @@ const RaceCalendar = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
               <SelectItem value="2024">2024</SelectItem>
               <SelectItem value="2023">2023</SelectItem>
-              <SelectItem value="2022">2022</SelectItem>
             </SelectContent>
           </Select>
           
@@ -245,7 +245,7 @@ const RaceCalendar = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <CalendarDays className="w-5 h-5" />
-              <span>Race Calendar</span>
+              <span>Race Calendar {selectedSeason}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>

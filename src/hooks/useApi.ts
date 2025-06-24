@@ -67,7 +67,7 @@ export const useApiMutation = (
   });
 };
 
-// Specific hooks for F1 data
+// Specific hooks for F1 data with dynamic year
 export const useDrivers = () => {
   return useApiQuery("drivers", ["drivers"]);
 };
@@ -77,11 +77,14 @@ export const useTeams = () => {
 };
 
 export const useRaceCalendar = (season?: string, status?: string) => {
+  const currentYear = new Date().getFullYear();
+  const targetSeason = season || currentYear.toString();
+  
   const params: Record<string, string> = {};
-  if (season) params.season = season;
+  params.season = targetSeason;
   if (status) params.status = status;
   
-  return useApiQuery("races", ["races", season || "2024", status || "all"], params);
+  return useApiQuery("races", ["races", targetSeason, status || "all"], params);
 };
 
 export const useLiveRaceData = (raceId: string) => {
@@ -93,9 +96,12 @@ export const useLiveRaceData = (raceId: string) => {
 };
 
 export const useChampionshipStandings = (season?: string, type?: string) => {
+  const currentYear = new Date().getFullYear();
+  const targetSeason = season || currentYear.toString();
+  
   const params: Record<string, string> = {};
-  if (season) params.season = season;
+  params.season = targetSeason;
   if (type) params.type = type;
   
-  return useApiQuery("championship", ["championship", season || "2024", type || "drivers"], params);
+  return useApiQuery("championship", ["championship", targetSeason, type || "drivers"], params);
 };

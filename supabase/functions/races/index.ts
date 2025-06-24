@@ -24,8 +24,11 @@ serve(async (req: Request) => {
 
     switch (method) {
       case "GET": {
-        const season = url.searchParams.get("season") || "2024";
+        const currentYear = new Date().getFullYear();
+        const season = url.searchParams.get("season") || currentYear.toString();
         const status = url.searchParams.get("status");
+
+        console.log(`Fetching races for season: ${season}`);
 
         let query = supabaseClient
           .from("races")
@@ -59,6 +62,51 @@ serve(async (req: Request) => {
         }
 
         const { data: races, error } = await query;
+
+        // If no races found for 2025, try fallback to 2024
+        if ((!races || races.length === 0) && season === "2025") {
+          console.log("No 2025 data found, falling back to 2024");
+          
+          const fallbackQuery = supabaseClient
+            .from("races")
+            .select(`
+              *,
+              circuits (
+                name,
+                location,
+                country,
+                track_length_km,
+                number_of_turns
+              ),
+              session_results (
+                *,
+                drivers (
+                  first_name,
+                  last_name,
+                  driver_number
+                ),
+                teams (
+                  name,
+                  primary_color
+                )
+              )
+            `)
+            .eq("season", 2024)
+            .order("round");
+
+          if (status) {
+            fallbackQuery.eq("status", status);
+          }
+
+          const { data: fallbackRaces, error: fallbackError } = await fallbackQuery;
+          
+          if (fallbackError) throw fallbackError;
+
+          return new Response(JSON.stringify({ races: fallbackRaces }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
 
         if (error) throw error;
 

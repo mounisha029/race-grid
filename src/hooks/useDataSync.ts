@@ -20,6 +20,8 @@ export const useDataSync = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastSync, setLastSync] = useState<SyncResult | null>(null);
 
+  const getCurrentYear = () => new Date().getFullYear();
+
   const syncData = async (request: SyncRequest): Promise<SyncResult> => {
     setIsLoading(true);
     
@@ -47,9 +49,9 @@ export const useDataSync = () => {
   };
 
   const syncCurrentSeason = async () => {
-    const currentSeason = new Date().getFullYear();
+    const currentSeason = getCurrentYear();
     
-    console.log('Starting full season sync...');
+    console.log(`Starting full season sync for ${currentSeason}...`);
     
     // Sync races first
     await syncData({ type: 'races', season: currentSeason });
@@ -58,15 +60,17 @@ export const useDataSync = () => {
     await syncData({ type: 'drivers', season: currentSeason });
     await syncData({ type: 'constructors', season: currentSeason });
     
-    console.log('Full season sync completed');
+    console.log(`Full season sync completed for ${currentSeason}`);
   };
 
-  const syncRaceResults = async (season: number, round: number) => {
-    return await syncData({ type: 'results', season, round });
+  const syncRaceResults = async (season?: number, round?: number) => {
+    const targetSeason = season || getCurrentYear();
+    const targetRound = round || 1;
+    return await syncData({ type: 'results', season: targetSeason, round: targetRound });
   };
 
   const forceSyncAll = async (season?: number) => {
-    const targetSeason = season || new Date().getFullYear();
+    const targetSeason = season || getCurrentYear();
     
     await syncData({ type: 'races', season: targetSeason, force: true });
     await syncData({ type: 'drivers', season: targetSeason, force: true });

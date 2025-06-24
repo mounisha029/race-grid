@@ -10,7 +10,7 @@ import { useRaces, Race } from "@/hooks/useRaces";
 const Races = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("round");
-  const [selectedSeason, setSelectedSeason] = useState("2024");
+  const [selectedSeason, setSelectedSeason] = useState(() => new Date().getFullYear().toString());
   
   const { data: races = [], isLoading, error } = useRaces(parseInt(selectedSeason));
 
@@ -83,9 +83,9 @@ const Races = () => {
                 <SelectValue placeholder="Season" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="2025">2025</SelectItem>
                 <SelectItem value="2024">2024</SelectItem>
                 <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -127,6 +127,7 @@ const Races = () => {
             <h3 className="text-xl font-semibold mb-2">No Races Found</h3>
             <p className="text-muted-foreground">
               No races are scheduled for the {selectedSeason} season yet.
+              {selectedSeason === "2025" && " Showing fallback data from 2024."}
             </p>
           </div>
         </section>

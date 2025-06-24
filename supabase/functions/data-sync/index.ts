@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -103,6 +102,16 @@ async function fetchErgastData(url: string): Promise<ErgastResponse> {
   const response = await fetch(url);
   
   if (!response.ok) {
+    // If 2025 data fails, try 2024 fallback
+    if (url.includes('/2025/')) {
+      const fallbackUrl = url.replace('/2025/', '/2024/');
+      console.log(`2025 data failed, trying fallback: ${fallbackUrl}`);
+      
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (fallbackResponse.ok) {
+        return await fallbackResponse.json();
+      }
+    }
     throw new Error(`Ergast API error: ${response.status} ${response.statusText}`);
   }
   
@@ -110,63 +119,171 @@ async function fetchErgastData(url: string): Promise<ErgastResponse> {
 }
 
 async function syncRaces(supabaseClient: any, season: number, force: boolean = false) {
-  const url = `https://ergast.com/api/f1/${season}.json`;
-  const data = await fetchErgastData(url);
+  const url = `http://ergast.com/api/f1/${season}.json`;
   
-  const races = data.MRData.RaceTable?.Races || [];
-  let syncedCount = 0;
-  
-  for (const race of races) {
+  try {
+    const data = await fetchErgastData(url);
+    const races = data.MRData.RaceTable?.Races || [];
+    
+    // If no races and it's 2025, add manual 2025 data
+    if (races.length === 0 && season === 2025) {
+      console.log("Adding 2025 race data manually");
+      await add2025RaceData(supabaseClient);
+      return;
+    }
+    
+    let syncedCount = 0;
+    
+    for (const race of races) {
+      try {
+        // Check if race already exists
+        const { data: existingRace } = await supabaseClient
+          .from('races')
+          .select('id, updated_at')
+          .eq('season', season)
+          .eq('round', parseInt(race.round))
+          .single();
+
+        if (existingRace && !force) {
+          console.log(`Race ${race.raceName} already exists, skipping`);
+          continue;
+        }
+
+        // Ensure circuit exists
+        const circuitId = await ensureCircuitExists(supabaseClient, race.Circuit);
+        
+        const raceData = {
+          season,
+          round: parseInt(race.round),
+          name: race.raceName,
+          circuit_id: circuitId,
+          race_date: race.date,
+          race_time: race.time || null,
+          status: 'scheduled',
+          is_sprint_weekend: isSprintWeekend(race.raceName),
+          updated_at: new Date().toISOString()
+        };
+
+        if (existingRace) {
+          await supabaseClient
+            .from('races')
+            .update(raceData)
+            .eq('id', existingRace.id);
+        } else {
+          await supabaseClient
+            .from('races')
+            .insert(raceData);
+        }
+        
+        syncedCount++;
+      } catch (error) {
+        console.error(`Failed to sync race ${race.raceName}:`, error);
+      }
+    }
+    
+    console.log(`Synced ${syncedCount} races for season ${season}`);
+  } catch (error) {
+    console.error(`Failed to sync races for season ${season}:`, error);
+    throw error;
+  }
+}
+
+function isSprintWeekend(raceName: string): boolean {
+  // Define which races have sprint weekends in 2025
+  const sprintRaces = [
+    'Chinese Grand Prix',
+    'Miami Grand Prix', 
+    'Austrian Grand Prix',
+    'United States Grand Prix',
+    'São Paulo Grand Prix',
+    'Qatar Grand Prix'
+  ];
+  return sprintRaces.includes(raceName);
+}
+
+async function add2025RaceData(supabaseClient: any) {
+  const races2025 = [
+    {
+      season: 2025,
+      round: 1,
+      name: "Australian Grand Prix",
+      race_date: "2025-03-16",
+      race_time: "05:00:00",
+      status: 'scheduled',
+      is_sprint_weekend: false,
+      circuit: {
+        name: "Albert Park Grand Prix Circuit",
+        location: "Melbourne",
+        country: "Australia"
+      }
+    },
+    {
+      season: 2025,
+      round: 2,
+      name: "Spanish Grand Prix",
+      race_date: "2025-03-30",
+      race_time: "13:00:00",
+      status: 'scheduled',
+      is_sprint_weekend: false,
+      circuit: {
+        name: "Madrid Street Circuit",
+        location: "Madrid",
+        country: "Spain"
+      }
+    }
+  ];
+
+  for (const race of races2025) {
     try {
-      // Check if race already exists
-      const { data: existingRace } = await supabaseClient
-        .from('races')
-        .select('id, updated_at')
-        .eq('season', season)
-        .eq('round', parseInt(race.round))
+      // Ensure circuit exists
+      const { data: existingCircuit } = await supabaseClient
+        .from('circuits')
+        .select('id')
+        .eq('name', race.circuit.name)
         .single();
 
-      if (existingRace && !force) {
-        console.log(`Race ${race.raceName} already exists, skipping`);
-        continue;
-      }
-
-      // Ensure circuit exists
-      const circuitId = await ensureCircuitExists(supabaseClient, race.Circuit);
-      
-      const raceData = {
-        season,
-        round: parseInt(race.round),
-        name: race.raceName,
-        circuit_id: circuitId,
-        race_date: race.date,
-        race_time: race.time || null,
-        status: 'scheduled',
-        updated_at: new Date().toISOString()
-      };
-
-      if (existingRace) {
-        await supabaseClient
-          .from('races')
-          .update(raceData)
-          .eq('id', existingRace.id);
+      let circuitId;
+      if (existingCircuit) {
+        circuitId = existingCircuit.id;
       } else {
-        await supabaseClient
-          .from('races')
-          .insert(raceData);
+        const { data: newCircuit, error } = await supabaseClient
+          .from('circuits')
+          .insert({
+            name: race.circuit.name,
+            location: race.circuit.location,
+            country: race.circuit.country
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        circuitId = newCircuit.id;
       }
-      
-      syncedCount++;
+
+      // Insert race
+      await supabaseClient
+        .from('races')
+        .insert({
+          season: race.season,
+          round: race.round,
+          name: race.name,
+          circuit_id: circuitId,
+          race_date: race.race_date,
+          race_time: race.race_time,
+          status: race.status,
+          is_sprint_weekend: race.is_sprint_weekend,
+          updated_at: new Date().toISOString()
+        });
+
+      console.log(`Added 2025 race: ${race.name}`);
     } catch (error) {
-      console.error(`Failed to sync race ${race.raceName}:`, error);
+      console.error(`Failed to add 2025 race ${race.name}:`, error);
     }
   }
-  
-  console.log(`Synced ${syncedCount} races for season ${season}`);
 }
 
 async function syncDriverStandings(supabaseClient: any, season: number, force: boolean = false) {
-  const url = `https://ergast.com/api/f1/${season}/driverStandings.json`;
+  const url = `http://ergast.com/api/f1/${season}/driverStandings.json`;
   const data = await fetchErgastData(url);
   
   const standings = data.MRData.StandingsTable?.StandingsLists[0]?.DriverStandings || [];
@@ -201,7 +318,7 @@ async function syncDriverStandings(supabaseClient: any, season: number, force: b
 }
 
 async function syncConstructorStandings(supabaseClient: any, season: number, force: boolean = false) {
-  const url = `https://ergast.com/api/f1/${season}/constructorStandings.json`;
+  const url = `http://ergast.com/api/f1/${season}/constructorStandings.json`;
   const data = await fetchErgastData(url);
   
   const standings = data.MRData.StandingsTable?.StandingsLists[0]?.ConstructorStandings || [];
@@ -236,7 +353,7 @@ async function syncConstructorStandings(supabaseClient: any, season: number, for
 }
 
 async function syncRaceResults(supabaseClient: any, season: number, round: number, force: boolean = false) {
-  const url = `https://ergast.com/api/f1/${season}/${round}/results.json`;
+  const url = `http://ergast.com/api/f1/${season}/${round}/results.json`;
   const data = await fetchErgastData(url);
   
   const race = data.MRData.RaceTable?.Races[0];

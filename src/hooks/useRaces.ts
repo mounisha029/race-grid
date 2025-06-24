@@ -17,11 +17,17 @@ export interface Race {
   is_sprint_weekend: boolean;
 }
 
-export const useRaces = (season: number = 2024) => {
+export const useRaces = (season?: number) => {
+  const currentYear = new Date().getFullYear();
+  const targetSeason = season || currentYear;
+
   return useQuery({
-    queryKey: ['races', season],
+    queryKey: ['races', targetSeason],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log(`Fetching races for season: ${targetSeason}`);
+      
+      // Try to fetch data for the target season
+      let { data, error } = await supabase
         .from('races')
         .select(`
           id,
@@ -39,8 +45,36 @@ export const useRaces = (season: number = 2024) => {
             country
           )
         `)
-        .eq('season', season)
+        .eq('season', targetSeason)
         .order('round');
+
+      // If no data found for target season and it's 2025, try fallback to 2024
+      if ((!data || data.length === 0) && targetSeason === 2025) {
+        console.log('No 2025 data found, falling back to 2024');
+        const fallbackQuery = await supabase
+          .from('races')
+          .select(`
+            id,
+            season,
+            round,
+            name,
+            race_date,
+            race_time,
+            status,
+            weather_condition,
+            is_sprint_weekend,
+            circuits (
+              name,
+              location,
+              country
+            )
+          `)
+          .eq('season', 2024)
+          .order('round');
+        
+        data = fallbackQuery.data;
+        error = fallbackQuery.error;
+      }
 
       if (error) throw error;
 
