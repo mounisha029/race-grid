@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Trophy, Calendar } from "lucide-react";
+import { BarChart3, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Poll {
@@ -20,9 +20,15 @@ interface Poll {
   ends_at: string;
   created_by: string;
   race_id?: string;
-  user_profiles: {
-    display_name: string;
-  };
+  created_at: string;
+}
+
+interface UserProfile {
+  display_name: string;
+}
+
+interface PollWithProfile extends Poll {
+  user_profiles: UserProfile | null;
 }
 
 interface CommunityPollsProps {
@@ -32,7 +38,7 @@ interface CommunityPollsProps {
 const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [polls, setPolls] = useState<Poll[]>([]);
+  const [polls, setPolls] = useState<PollWithProfile[]>([]);
   const [userVotes, setUserVotes] = useState<Record<string, string>>({});
   const [newPoll, setNewPoll] = useState({
     question: '',
@@ -52,22 +58,33 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
     try {
       let query = supabase
         .from('community_polls')
-        .select(`
-          *,
-          user_profiles (
-            display_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (raceId) {
         query = query.eq('race_id', raceId);
       }
 
-      const { data, error } = await query;
+      const { data: pollsData, error } = await query;
       if (error) throw error;
+
+      // Fetch user profiles for each poll
+      const pollsWithProfiles = await Promise.all(
+        (pollsData || []).map(async (poll) => {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('display_name')
+            .eq('user_id', poll.created_by)
+            .single();
+
+          return {
+            ...poll,
+            user_profiles: profileData
+          };
+        })
+      );
       
-      setPolls(data || []);
+      setPolls(pollsWithProfiles);
     } catch (error) {
       console.error('Error fetching polls:', error);
     } finally {
@@ -76,11 +93,13 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
   };
 
   const fetchUserVotes = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
         .from('poll_votes')
         .select('poll_id, selected_option')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -113,7 +132,7 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
           options: newPoll.options.filter(opt => opt.trim()),
           votes: {},
           total_votes: 0,
-          ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+          ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           created_by: user.id,
           race_id: raceId
         });
@@ -264,7 +283,7 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
                   </Badge>
                 </div>
                 <CardDescription>
-                  Created by {poll.user_profiles?.display_name} • 
+                  Created by {poll.user_profiles?.display_name || 'Anonymous'} • 
                   Ends {new Date(poll.ends_at).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>

@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare, Heart, Share2, User, Clock } from "lucide-react";
@@ -19,10 +17,15 @@ interface Comment {
   user_id: string;
   race_id: string;
   likes_count: number;
-  user_profiles: {
-    display_name: string;
-    avatar_url: string;
-  };
+}
+
+interface UserProfile {
+  display_name: string;
+  avatar_url: string;
+}
+
+interface CommentWithProfile extends Comment {
+  user_profiles: UserProfile | null;
 }
 
 interface RaceDiscussionProps {
@@ -33,7 +36,7 @@ interface RaceDiscussionProps {
 const RaceDiscussion = ({ raceId, raceName }: RaceDiscussionProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentWithProfile[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -44,20 +47,31 @@ const RaceDiscussion = ({ raceId, raceName }: RaceDiscussionProps) => {
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: commentsData, error } = await supabase
         .from('race_comments')
-        .select(`
-          *,
-          user_profiles (
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('race_id', raceId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setComments(data || []);
+
+      // Fetch user profiles for each comment
+      const commentsWithProfiles = await Promise.all(
+        (commentsData || []).map(async (comment) => {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('display_name, avatar_url')
+            .eq('user_id', comment.user_id)
+            .single();
+
+          return {
+            ...comment,
+            user_profiles: profileData
+          };
+        })
+      );
+
+      setComments(commentsWithProfiles);
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({

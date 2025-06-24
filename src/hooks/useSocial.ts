@@ -8,7 +8,7 @@ interface SocialStats {
   postsCount: number;
   followersCount: number;
   followingCount: number;
-  likesReceived: number;
+  commentsCount: number;
 }
 
 export const useSocial = () => {
@@ -18,7 +18,7 @@ export const useSocial = () => {
     postsCount: 0,
     followersCount: 0,
     followingCount: 0,
-    likesReceived: 0
+    commentsCount: 0
   });
   const [loading, setLoading] = useState(false);
 
@@ -33,8 +33,7 @@ export const useSocial = () => {
 
     setLoading(true);
     try {
-      // Fetch user's social statistics
-      const [postsResult, followersResult, followingResult] = await Promise.all([
+      const [postsResult, followersResult, followingResult, commentsResult] = await Promise.all([
         supabase
           .from('social_posts')
           .select('id', { count: 'exact' })
@@ -46,14 +45,18 @@ export const useSocial = () => {
         supabase
           .from('user_follows')
           .select('id', { count: 'exact' })
-          .eq('follower_id', user.id)
+          .eq('follower_id', user.id),
+        supabase
+          .from('race_comments')
+          .select('id', { count: 'exact' })
+          .eq('user_id', user.id)
       ]);
 
       setStats({
         postsCount: postsResult.count || 0,
         followersCount: followersResult.count || 0,
         followingCount: followingResult.count || 0,
-        likesReceived: 0 // We'll implement this when we have the likes table
+        commentsCount: commentsResult.count || 0
       });
     } catch (error) {
       console.error('Error fetching social stats:', error);

@@ -5,25 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Trophy, Calendar, MessageSquare, Users } from "lucide-react";
+import { User, Trophy, MessageSquare, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserProfileData {
   id: string;
+  user_id: string;
   display_name: string;
   bio: string;
   favorite_driver_id: string;
   favorite_team_id: string;
   avatar_url: string;
   created_at: string;
-  predictions_count: number;
-  comments_count: number;
-  followers_count: number;
-  following_count: number;
 }
 
 interface UserProfileProps {
@@ -36,6 +32,12 @@ const UserProfile = ({ userId }: UserProfileProps) => {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    postsCount: 0,
+    commentsCount: 0,
+    followersCount: 0,
+    followingCount: 0
+  });
   const [formData, setFormData] = useState({
     display_name: '',
     bio: '',
@@ -49,6 +51,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
   useEffect(() => {
     if (targetUserId) {
       fetchProfile();
+      fetchStats();
     }
   }, [targetUserId]);
 
@@ -57,7 +60,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('id', targetUserId)
+        .eq('user_id', targetUserId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -85,12 +88,36 @@ const UserProfile = ({ userId }: UserProfileProps) => {
     }
   };
 
+  const fetchStats = async () => {
+    if (!targetUserId) return;
+
+    try {
+      const [postsResult, commentsResult, followersResult, followingResult] = await Promise.all([
+        supabase.from('social_posts').select('id', { count: 'exact' }).eq('user_id', targetUserId),
+        supabase.from('race_comments').select('id', { count: 'exact' }).eq('user_id', targetUserId),
+        supabase.from('user_follows').select('id', { count: 'exact' }).eq('following_id', targetUserId),
+        supabase.from('user_follows').select('id', { count: 'exact' }).eq('follower_id', targetUserId)
+      ]);
+
+      setStats({
+        postsCount: postsResult.count || 0,
+        commentsCount: commentsResult.count || 0,
+        followersCount: followersResult.count || 0,
+        followingCount: followingResult.count || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   const updateProfile = async () => {
+    if (!user) return;
+
     try {
       const { error } = await supabase
         .from('user_profiles')
         .upsert({
-          id: user?.id,
+          user_id: user.id,
           ...formData,
           updated_at: new Date().toISOString()
         });
@@ -115,11 +142,13 @@ const UserProfile = ({ userId }: UserProfileProps) => {
   };
 
   const followUser = async () => {
+    if (!user || !targetUserId) return;
+
     try {
       const { error } = await supabase
         .from('user_follows')
         .insert({
-          follower_id: user?.id,
+          follower_id: user.id,
           following_id: targetUserId
         });
 
@@ -130,7 +159,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
         description: "Now following user",
       });
       
-      fetchProfile();
+      fetchStats();
     } catch (error) {
       console.error('Error following user:', error);
     }
@@ -216,15 +245,15 @@ const UserProfile = ({ userId }: UserProfileProps) => {
         <Card>
           <CardContent className="p-4 text-center">
             <Trophy className="w-6 h-6 mx-auto mb-2 text-f1-orange" />
-            <div className="text-2xl font-bold">{profile?.predictions_count || 0}</div>
-            <div className="text-sm text-muted-foreground">Predictions</div>
+            <div className="text-2xl font-bold">{stats.postsCount}</div>
+            <div className="text-sm text-muted-foreground">Posts</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardContent className="p-4 text-center">
             <MessageSquare className="w-6 h-6 mx-auto mb-2 text-f1-red" />
-            <div className="text-2xl font-bold">{profile?.comments_count || 0}</div>
+            <div className="text-2xl font-bold">{stats.commentsCount}</div>
             <div className="text-sm text-muted-foreground">Comments</div>
           </CardContent>
         </Card>
@@ -232,7 +261,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
         <Card>
           <CardContent className="p-4 text-center">
             <Users className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <div className="text-2xl font-bold">{profile?.followers_count || 0}</div>
+            <div className="text-2xl font-bold">{stats.followersCount}</div>
             <div className="text-sm text-muted-foreground">Followers</div>
           </CardContent>
         </Card>
@@ -240,7 +269,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
         <Card>
           <CardContent className="p-4 text-center">
             <Users className="w-6 h-6 mx-auto mb-2 text-green-500" />
-            <div className="text-2xl font-bold">{profile?.following_count || 0}</div>
+            <div className="text-2xl font-bold">{stats.followingCount}</div>
             <div className="text-sm text-muted-foreground">Following</div>
           </CardContent>
         </Card>
@@ -249,7 +278,7 @@ const UserProfile = ({ userId }: UserProfileProps) => {
       <Tabs defaultValue="activity" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          <TabsTrigger value="predictions">Predictions</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="following">Following</TabsTrigger>
         </TabsList>
         
@@ -264,13 +293,13 @@ const UserProfile = ({ userId }: UserProfileProps) => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="predictions" className="space-y-4">
+        <TabsContent value="posts" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Race Predictions</CardTitle>
+              <CardTitle>Posts</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Predictions history coming soon...</p>
+              <p className="text-muted-foreground">Posts history coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>

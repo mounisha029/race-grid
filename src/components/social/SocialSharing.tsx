@@ -2,29 +2,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Share2, Camera, Video, Trophy, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface SocialPost {
-  id: string;
-  content: string;
-  image_url?: string;
-  video_url?: string;
-  type: 'moment' | 'prediction' | 'photo' | 'video';
-  race_id?: string;
-  created_at: string;
-  likes_count: number;
-  shares_count: number;
-  user_profiles: {
-    display_name: string;
-    avatar_url: string;
-  };
-}
 
 interface SocialSharingProps {
   raceId?: string;
@@ -34,9 +17,7 @@ interface SocialSharingProps {
 const SocialSharing = ({ raceId, raceName }: SocialSharingProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [posts, setPosts] = useState<SocialPost[]>([]);
   const [newPost, setNewPost] = useState('');
-  const [postType, setPostType] = useState<'moment' | 'prediction' | 'photo' | 'video'>('moment');
   const [loading, setLoading] = useState(false);
 
   const sharePost = async () => {
@@ -48,7 +29,6 @@ const SocialSharing = ({ raceId, raceName }: SocialSharingProps) => {
         .from('social_posts')
         .insert({
           content: newPost.trim(),
-          type: postType,
           race_id: raceId,
           user_id: user.id
         });
@@ -100,43 +80,8 @@ const SocialSharing = ({ raceId, raceName }: SocialSharingProps) => {
         
         {user && (
           <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Button
-                variant={postType === 'moment' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPostType('moment')}
-              >
-                <Clock className="w-4 h-4 mr-1" />
-                Moment
-              </Button>
-              <Button
-                variant={postType === 'prediction' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPostType('prediction')}
-              >
-                <Trophy className="w-4 h-4 mr-1" />
-                Prediction
-              </Button>
-              <Button
-                variant={postType === 'photo' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPostType('photo')}
-              >
-                <Camera className="w-4 h-4 mr-1" />
-                Photo
-              </Button>
-              <Button
-                variant={postType === 'video' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPostType('video')}
-              >
-                <Video className="w-4 h-4 mr-1" />
-                Video
-              </Button>
-            </div>
-            
             <Textarea
-              placeholder={`Share your ${postType}...`}
+              placeholder="Share your F1 moment..."
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
               className="min-h-[100px]"
