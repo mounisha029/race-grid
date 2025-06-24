@@ -1,3 +1,4 @@
+
 import Index from "@/pages/Index";
 import Drivers from "@/pages/Drivers";
 import Teams from "@/pages/Teams";
@@ -6,6 +7,8 @@ import Admin from "@/pages/Admin";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import Calendar from "@/pages/Calendar";
+import DriverProfile from "@/pages/DriverProfile";
+import TeamProfile from "@/pages/TeamProfile";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,7 +26,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/drivers" element={<Drivers />} />
+              <Route path="/drivers/:id" element={<DriverProfile />} />
               <Route path="/teams" element={<Teams />} />
+              <Route path="/teams/:id" element={<TeamProfile />} />
               <Route path="/races" element={<Races />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/admin" element={<Admin />} />
