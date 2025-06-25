@@ -6,54 +6,44 @@ import TeamCard from "@/components/TeamCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flag, Trophy, Clock, TrendingUp } from "lucide-react";
+import { useRaces } from "@/hooks/useRaces";
 
 const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { data: races = [] } = useRaces(2025);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Mock data - updated to match Race interface
-  const nextRace = {
-    id: "1",
-    name: "Saudi Arabian Grand Prix",
-    location: "Jeddah",
-    country: "Saudi Arabia",
-    date: "2024-03-09",
-    time: "15:00:00",
-    round: 2,
-    status: "scheduled" as const,
-    circuit: "Jeddah Corniche Circuit",
-    season: 2024,
-    weather_condition: "dry" as const,
-    is_sprint_weekend: false
-  };
+  // Get next upcoming race from 2025 calendar
+  const nextRace = races.find(race => new Date(race.date) > new Date()) || races[0];
 
+  // Updated driver data for 2025
   const topDrivers = [
     {
       id: "1",
       name: "Max Verstappen",
       team: "Red Bull Racing",
       position: 1,
-      points: 575,
+      points: 0,
       nationality: "Netherlands",
       number: 1,
-      teamColor: "#001F5B",
+      teamColor: "#0600EF",
       lastRacePosition: 1,
       trend: "stable" as const
     },
     {
       id: "2", 
       name: "Lewis Hamilton",
-      team: "Mercedes",
+      team: "Ferrari",
       position: 2,
-      points: 234,
+      points: 0,
       nationality: "United Kingdom",
       number: 44,
-      teamColor: "#C0C0C0",
-      lastRacePosition: 3,
+      teamColor: "#DC143C",
+      lastRacePosition: 1,
       trend: "up" as const
     },
     {
@@ -61,37 +51,41 @@ const Index = () => {
       name: "Charles Leclerc", 
       team: "Ferrari",
       position: 3,
-      points: 206,
+      points: 0,
       nationality: "Monaco",
       number: 16,
       teamColor: "#DC143C",
       lastRacePosition: 2,
-      trend: "down" as const
+      trend: "stable" as const
     }
   ];
 
+  // Updated team data for 2025
   const topTeams = [
     {
       id: "1",
       name: "Red Bull Racing",
       position: 1,
-      points: 860,
-      color: "#001F5B",
+      points: 0,
+      color: "#0600EF",
       drivers: ["Max Verstappen", "Sergio Pérez"],
-      wins: 21,
-      podiums: 35
+      wins: 0,
+      podiums: 0
     },
     {
       id: "2",
-      name: "Mercedes",
+      name: "Ferrari",
       position: 2,
-      points: 409,
-      color: "#C0C0C0", 
-      drivers: ["Lewis Hamilton", "George Russell"],
-      wins: 1,
-      podiums: 8
+      points: 0,
+      color: "#DC143C", 
+      drivers: ["Lewis Hamilton", "Charles Leclerc"],
+      wins: 0,
+      podiums: 0
     }
   ];
+
+  // Calculate days to next race
+  const daysToNextRace = nextRace ? Math.ceil((new Date(nextRace.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,7 +132,7 @@ const Index = () => {
             <Card className="text-center border-l-4 border-l-f1-red">
               <CardContent className="pt-6">
                 <Flag className="w-8 h-8 mx-auto mb-2 text-f1-red" />
-                <p className="text-2xl font-bold">22</p>
+                <p className="text-2xl font-bold">24</p>
                 <p className="text-sm text-muted-foreground">Races This Season</p>
               </CardContent>
             </Card>
@@ -162,7 +156,7 @@ const Index = () => {
             <Card className="text-center border-l-4 border-l-f1-green">
               <CardContent className="pt-6">
                 <Clock className="w-8 h-8 mx-auto mb-2 text-f1-green" />
-                <p className="text-2xl font-bold">3</p>
+                <p className="text-2xl font-bold">{daysToNextRace > 0 ? daysToNextRace : 'TBD'}</p>
                 <p className="text-sm text-muted-foreground">Days to Next Race</p>
               </CardContent>
             </Card>
@@ -171,20 +165,22 @@ const Index = () => {
       </section>
 
       {/* Next Race */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="racing-text text-4xl mb-4 bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
-              Next Race 🏁
-            </h2>
-            <p className="text-muted-foreground">Don't miss the action</p>
+      {nextRace && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="racing-text text-4xl mb-4 bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
+                Next Race 🏁
+              </h2>
+              <p className="text-muted-foreground">Don't miss the action</p>
+            </div>
+            
+            <div className="max-w-md mx-auto">
+              <RaceCard race={nextRace} />
+            </div>
           </div>
-          
-          <div className="max-w-md mx-auto">
-            <RaceCard race={nextRace} />
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Championship Leaders */}
       <section className="py-16 bg-muted/20">
@@ -232,7 +228,7 @@ const Index = () => {
             Formula 1 race tracking and analytics platform
           </p>
           <p className="text-gray-500 text-sm">
-            © 2024 F1 Box Box. All rights reserved.
+            © 2025 F1 Box Box. All rights reserved.
           </p>
         </div>
       </footer>

@@ -1,4 +1,3 @@
-
 import RaceCard from "@/components/RaceCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +9,7 @@ import { useRaces, Race } from "@/hooks/useRaces";
 const Races = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("round");
-  const [selectedSeason, setSelectedSeason] = useState(() => new Date().getFullYear().toString());
+  const [selectedSeason, setSelectedSeason] = useState("2025");
   
   const { data: races = [], isLoading, error } = useRaces(parseInt(selectedSeason));
 
@@ -126,8 +125,7 @@ const Races = () => {
             <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Races Found</h3>
             <p className="text-muted-foreground">
-              No races are scheduled for the {selectedSeason} season yet.
-              {selectedSeason === "2025" && " Showing fallback data from 2024."}
+              No races are scheduled for the {selectedSeason} season.
             </p>
           </div>
         </section>
