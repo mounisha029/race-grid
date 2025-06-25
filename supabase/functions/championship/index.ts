@@ -20,32 +20,67 @@ serve(async (req: Request) => {
     );
 
     const url = new URL(req.url);
-    const season = parseInt(url.searchParams.get("season") || "2024");
+    const season = parseInt(url.searchParams.get("season") || "2025");
     const type = url.searchParams.get("type") || "drivers";
+
+    console.log(`Fetching ${type} championship for season ${season}`);
 
     if (type === "drivers") {
       // Get driver championship standings
-      const { data: standings, error } = await supabaseClient
+      const { data: championships, error: champError } = await supabaseClient
         .from("championships")
-        .select(`
-          *,
-          drivers (
+        .select("*")
+        .eq("season", season)
+        .eq("type", "drivers")
+        .order("position");
+
+      if (champError) {
+        console.error("Championship query error:", champError);
+        throw champError;
+      }
+
+      console.log(`Found ${championships?.length || 0} driver championships`);
+
+      // Get driver details for each championship entry
+      const standings = [];
+      for (const champ of championships || []) {
+        const { data: driver, error: driverError } = await supabaseClient
+          .from("drivers")
+          .select(`
             first_name,
             last_name,
             driver_number,
             nationality,
             profile_image_url,
-            teams (
-              name,
-              primary_color
-            )
-          )
-        `)
-        .eq("season", season)
-        .eq("type", "drivers")
-        .order("position");
+            team_id
+          `)
+          .eq("id", champ.entity_id)
+          .single();
 
-      if (error) throw error;
+        if (driverError) {
+          console.error("Driver query error:", driverError);
+          continue;
+        }
+
+        // Get team info for the driver
+        let teamInfo = null;
+        if (driver?.team_id) {
+          const { data: team } = await supabaseClient
+            .from("teams")
+            .select("name, primary_color")
+            .eq("id", driver.team_id)
+            .single();
+          teamInfo = team;
+        }
+
+        standings.push({
+          ...champ,
+          drivers: {
+            ...driver,
+            teams: teamInfo
+          }
+        });
+      }
 
       return new Response(JSON.stringify({ 
         type: "drivers",
@@ -57,24 +92,46 @@ serve(async (req: Request) => {
       });
     } else {
       // Get constructor championship standings
-      const { data: standings, error } = await supabaseClient
+      const { data: championships, error: champError } = await supabaseClient
         .from("championships")
-        .select(`
-          *,
-          teams (
+        .select("*")
+        .eq("season", season)
+        .eq("type", "constructors")
+        .order("position");
+
+      if (champError) {
+        console.error("Championship query error:", champError);
+        throw champError;
+      }
+
+      console.log(`Found ${championships?.length || 0} constructor championships`);
+
+      // Get team details for each championship entry
+      const standings = [];
+      for (const champ of championships || []) {
+        const { data: team, error: teamError } = await supabaseClient
+          .from("teams")
+          .select(`
             name,
             full_name,
             primary_color,
             secondary_color,
             logo_url,
             base_location
-          )
-        `)
-        .eq("season", season)
-        .eq("type", "constructors")
-        .order("position");
+          `)
+          .eq("id", champ.entity_id)
+          .single();
 
-      if (error) throw error;
+        if (teamError) {
+          console.error("Team query error:", teamError);
+          continue;
+        }
+
+        standings.push({
+          ...champ,
+          teams: team
+        });
+      }
 
       return new Response(JSON.stringify({ 
         type: "constructors",
