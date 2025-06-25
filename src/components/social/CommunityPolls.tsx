@@ -68,7 +68,7 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
       const { data: pollsData, error } = await query;
       if (error) throw error;
 
-      // Fetch user profiles for each poll
+      // Fetch user profiles for each poll and transform the data
       const pollsWithProfiles = await Promise.all(
         (pollsData || []).map(async (poll) => {
           const { data: profileData } = await supabase
@@ -78,7 +78,15 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
             .single();
 
           return {
-            ...poll,
+            id: poll.id,
+            question: poll.question,
+            options: Array.isArray(poll.options) ? poll.options : [],
+            votes: typeof poll.votes === 'object' && poll.votes !== null ? poll.votes as Record<string, number> : {},
+            total_votes: poll.total_votes || 0,
+            ends_at: poll.ends_at,
+            created_by: poll.created_by,
+            race_id: poll.race_id,
+            created_at: poll.created_at,
             user_profiles: profileData
           };
         })
