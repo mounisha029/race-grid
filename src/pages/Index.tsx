@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flag, Trophy, Clock, TrendingUp } from "lucide-react";
 import { useRaces } from "@/hooks/useRaces";
+import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
 
 const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { data: races = [] } = useRaces(2025);
+  
+  // Fetch championship standings
+  const { data: driverChampionshipData } = useChampionshipStandings("2025", "drivers");
+  const { data: constructorChampionshipData } = useChampionshipStandings("2025", "constructors");
+  const { data: teamsData } = useTeams();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -20,69 +26,35 @@ const Index = () => {
   // Get next upcoming race from 2025 calendar
   const nextRace = races.find(race => new Date(race.date) > new Date()) || races[0];
 
-  // Updated driver data for 2025 with correct standings and team pairings
-  const topDrivers = [
-    {
-      id: "1",
-      name: "Max Verstappen",
-      team: "Red Bull Racing",
-      position: 1,
-      points: 0,
-      nationality: "Netherlands",
-      number: 1,
-      teamColor: "#0600EF",
-      lastRacePosition: 1,
-      trend: "stable" as const
-    },
-    {
-      id: "2", 
-      name: "Lewis Hamilton",
-      team: "Ferrari", // Moved to Ferrari in 2025
-      position: 2,
-      points: 0,
-      nationality: "United Kingdom",
-      number: 44,
-      teamColor: "#DC143C",
-      lastRacePosition: 1,
-      trend: "up" as const
-    },
-    {
-      id: "3",
-      name: "Charles Leclerc", 
-      team: "Ferrari",
-      position: 3,
-      points: 0,
-      nationality: "Monaco",
-      number: 16,
-      teamColor: "#DC143C",
-      lastRacePosition: 2,
-      trend: "stable" as const
-    }
-  ];
+  // Transform driver championship data to match component interface
+  const topDrivers = driverChampionshipData?.standings?.slice(0, 3).map((standing: any) => ({
+    id: standing.id,
+    name: `${standing.drivers?.first_name} ${standing.drivers?.last_name}`,
+    team: standing.drivers?.teams?.name || "Unknown Team",
+    position: standing.position,
+    points: standing.points || 0,
+    nationality: standing.drivers?.nationality || "Unknown",
+    number: standing.drivers?.driver_number || 0,
+    teamColor: standing.drivers?.teams?.primary_color || "#666666",
+    lastRacePosition: standing.position,
+    trend: "stable" as const
+  })) || [];
 
-  // Updated team data for 2025 with correct driver pairings
-  const topTeams = [
-    {
-      id: "1",
-      name: "Red Bull Racing",
-      position: 1,
-      points: 0,
-      color: "#0600EF",
-      drivers: ["Max Verstappen", "Liam Lawson"], // Updated pairing - Lawson replaced Perez
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "2",
-      name: "Ferrari",
-      position: 2,
-      points: 0,
-      color: "#DC143C", 
-      drivers: ["Lewis Hamilton", "Charles Leclerc"], // Hamilton moved to Ferrari
-      wins: 0,
-      podiums: 0
-    }
-  ];
+  // Transform constructor championship data to match component interface
+  const topTeams = constructorChampionshipData?.standings?.slice(0, 2).map((standing: any) => {
+    const teamDetails = teamsData?.teams?.find((team: any) => team.id === standing.entity_id);
+    
+    return {
+      id: standing.id,
+      name: standing.teams?.name || teamDetails?.name || "Unknown Team",
+      position: standing.position,
+      points: standing.points || 0,
+      color: standing.teams?.primary_color || teamDetails?.primary_color || "#666666",
+      drivers: teamDetails?.drivers?.map((driver: any) => `${driver.first_name} ${driver.last_name}`) || [],
+      wins: standing.wins || 0,
+      podiums: standing.podiums || 0
+    };
+  }) || [];
 
   // Calculate days to next race
   const daysToNextRace = nextRace ? Math.ceil((new Date(nextRace.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
@@ -192,9 +164,15 @@ const Index = () => {
                 🏆 Driver Championship
               </h2>
               <div className="space-y-6">
-                {topDrivers.map((driver) => (
-                  <DriverCard key={driver.id} driver={driver} />
-                ))}
+                {topDrivers.length > 0 ? (
+                  topDrivers.map((driver) => (
+                    <DriverCard key={driver.id} driver={driver} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No driver championship data available</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -204,9 +182,15 @@ const Index = () => {
                 🏗️ Constructor Championship
               </h2>
               <div className="space-y-6">
-                {topTeams.map((team) => (
-                  <TeamCard key={team.id} team={team} />
-                ))}
+                {topTeams.length > 0 ? (
+                  topTeams.map((team) => (
+                    <TeamCard key={team.id} team={team} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No constructor championship data available</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

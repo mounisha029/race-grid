@@ -1,136 +1,31 @@
+
 import DriverCard from "@/components/DriverCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Trophy } from "lucide-react";
+import { useChampionshipStandings } from "@/hooks/useApi";
 
 const Drivers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
 
-  // Updated 2025 driver standings with correct team pairings
-  const drivers = [
-    {
-      id: "1",
-      name: "Max Verstappen",
-      team: "Red Bull Racing",
-      position: 1,
-      points: 0, // 2025 season just started
-      nationality: "Netherlands",
-      number: 1,
-      teamColor: "#001F5B",
-      lastRacePosition: 1,
-      trend: "stable" as const
-    },
-    {
-      id: "2", 
-      name: "Lewis Hamilton",
-      team: "Ferrari", // Moved to Ferrari in 2025
-      position: 2,
-      points: 0,
-      nationality: "United Kingdom",
-      number: 44,
-      teamColor: "#DC143C",
-      lastRacePosition: 2,
-      trend: "up" as const
-    },
-    {
-      id: "3",
-      name: "Charles Leclerc",
-      team: "Ferrari",
-      position: 3,
-      points: 0,
-      nationality: "Monaco",
-      number: 16,
-      teamColor: "#DC143C",
-      lastRacePosition: 3,
-      trend: "stable" as const
-    },
-    {
-      id: "4",
-      name: "Liam Lawson", // Replaced Sergio Perez at Red Bull
-      team: "Red Bull Racing",
-      position: 4,
-      points: 0,
-      nationality: "New Zealand",
-      number: 30,
-      teamColor: "#001F5B",
-      lastRacePosition: 4,
-      trend: "up" as const
-    },
-    {
-      id: "5",
-      name: "George Russell",
-      team: "Mercedes",
-      position: 5,
-      points: 0,
-      nationality: "United Kingdom",
-      number: 63,
-      teamColor: "#C0C0C0",
-      lastRacePosition: 5,
-      trend: "stable" as const
-    },
-    {
-      id: "6",
-      name: "Kimi Antonelli", // New Mercedes driver replacing Hamilton
-      team: "Mercedes",
-      position: 6,
-      points: 0,
-      nationality: "Italy",
-      number: 12,
-      teamColor: "#C0C0C0",
-      lastRacePosition: 6,
-      trend: "up" as const
-    },
-    {
-      id: "7",
-      name: "Lando Norris",
-      team: "McLaren",
-      position: 7,
-      points: 0,
-      nationality: "United Kingdom",
-      number: 4,
-      teamColor: "#FF6600",
-      lastRacePosition: 7,
-      trend: "stable" as const
-    },
-    {
-      id: "8",
-      name: "Oscar Piastri",
-      team: "McLaren",
-      position: 8,
-      points: 0,
-      nationality: "Australia",
-      number: 81,
-      teamColor: "#FF6600",
-      lastRacePosition: 8,
-      trend: "up" as const
-    },
-    {
-      id: "9",
-      name: "Fernando Alonso",
-      team: "Aston Martin",
-      position: 9,
-      points: 0,
-      nationality: "Spain",
-      number: 14,
-      teamColor: "#00A693",
-      lastRacePosition: 9,
-      trend: "stable" as const
-    },
-    {
-      id: "10",
-      name: "Lance Stroll",
-      team: "Aston Martin",
-      position: 10,
-      points: 0,
-      nationality: "Canada",
-      number: 18,
-      teamColor: "#00A693",
-      lastRacePosition: 10,
-      trend: "down" as const
-    }
-  ];
+  // Fetch 2025 driver championship standings
+  const { data: championshipData, isLoading, error } = useChampionshipStandings("2025", "drivers");
+
+  // Transform API data to match our component interface
+  const drivers = championshipData?.standings?.map((standing: any) => ({
+    id: standing.id,
+    name: `${standing.drivers?.first_name} ${standing.drivers?.last_name}`,
+    team: standing.drivers?.teams?.name || "Unknown Team",
+    position: standing.position,
+    points: standing.points || 0,
+    nationality: standing.drivers?.nationality || "Unknown",
+    number: standing.drivers?.driver_number || 0,
+    teamColor: standing.drivers?.teams?.primary_color || "#666666",
+    lastRacePosition: standing.position,
+    trend: "stable" as const
+  })) || [];
 
   const filteredDrivers = drivers
     .filter(driver => 
@@ -150,6 +45,28 @@ const Drivers = () => {
           return a.position - b.position;
       }
     });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-f1-red mx-auto mb-4"></div>
+          <p className="text-lg">Loading driver standings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-500">Error loading driver standings</p>
+          <p className="text-sm text-muted-foreground">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,11 +118,17 @@ const Drivers = () => {
       {/* Drivers Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDrivers.map((driver) => (
-              <DriverCard key={driver.id} driver={driver} />
-            ))}
-          </div>
+          {filteredDrivers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">No driver standings data available for 2025 season</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDrivers.map((driver) => (
+                <DriverCard key={driver.id} driver={driver} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

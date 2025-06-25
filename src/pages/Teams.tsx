@@ -1,116 +1,37 @@
+
 import TeamCard from "@/components/TeamCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Users } from "lucide-react";
+import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
 
-  // Updated 2025 constructor standings with correct driver pairings
-  const teams = [
-    {
-      id: "1",
-      name: "Red Bull Racing",
-      position: 1,
-      points: 0, // 2025 season just started
-      color: "#001F5B",
-      drivers: ["Max Verstappen", "Liam Lawson"], // Updated pairing
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "2",
-      name: "Ferrari",
-      position: 2,
-      points: 0,
-      color: "#DC143C", 
-      drivers: ["Lewis Hamilton", "Charles Leclerc"], // Hamilton moved to Ferrari
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "3",
-      name: "Mercedes",
-      position: 3,
-      points: 0,
-      color: "#C0C0C0",
-      drivers: ["George Russell", "Kimi Antonelli"], // Antonelli replaced Hamilton
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "4",
-      name: "McLaren",
-      position: 4,
-      points: 0,
-      color: "#FF6600",
-      drivers: ["Lando Norris", "Oscar Piastri"],
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "5",
-      name: "Aston Martin",
-      position: 5,
-      points: 0,
-      color: "#00A693",
-      drivers: ["Fernando Alonso", "Lance Stroll"],
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "6",
-      name: "Alpine",
-      position: 6,
-      points: 0,
-      color: "#0070C0",
-      drivers: ["Pierre Gasly", "Jack Doohan"], // Doohan replaced Ocon
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "7",
-      name: "Williams",
-      position: 7,
-      points: 0,
-      color: "#005AFF",
-      drivers: ["Alex Albon", "Carlos Sainz"], // Sainz moved to Williams
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "8",
-      name: "RB",
-      position: 8,
-      points: 0,
-      color: "#6692FF",
-      drivers: ["Yuki Tsunoda", "Isack Hadjar"], // New pairing
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "9",
-      name: "Haas",
-      position: 9,
-      points: 0,
-      color: "#B6BABD",
-      drivers: ["Esteban Ocon", "Oliver Bearman"], // Ocon moved to Haas
-      wins: 0,
-      podiums: 0
-    },
-    {
-      id: "10",
-      name: "Sauber",
-      position: 10,
-      points: 0,
-      color: "#52E252",
-      drivers: ["Nico Hülkenberg", "Gabriel Bortoleto"], // New lineup
-      wins: 0,
-      podiums: 0
-    }
-  ];
+  // Fetch 2025 constructor championship standings
+  const { data: championshipData, isLoading: championshipLoading, error: championshipError } = useChampionshipStandings("2025", "constructors");
+  const { data: teamsData, isLoading: teamsLoading } = useTeams();
+
+  const isLoading = championshipLoading || teamsLoading;
+
+  // Transform API data to match our component interface
+  const teams = championshipData?.standings?.map((standing: any) => {
+    // Find team details from teams API
+    const teamDetails = teamsData?.teams?.find((team: any) => team.id === standing.entity_id);
+    
+    return {
+      id: standing.id,
+      name: standing.teams?.name || teamDetails?.name || "Unknown Team",
+      position: standing.position,
+      points: standing.points || 0,
+      color: standing.teams?.primary_color || teamDetails?.primary_color || "#666666",
+      drivers: teamDetails?.drivers?.map((driver: any) => `${driver.first_name} ${driver.last_name}`) || [],
+      wins: standing.wins || 0,
+      podiums: standing.podiums || 0
+    };
+  }) || [];
 
   const filteredTeams = teams
     .filter(team => 
@@ -131,6 +52,28 @@ const Teams = () => {
           return a.position - b.position;
       }
     });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-f1-red mx-auto mb-4"></div>
+          <p className="text-lg">Loading constructor standings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (championshipError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-500">Error loading constructor standings</p>
+          <p className="text-sm text-muted-foreground">{championshipError.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,11 +126,17 @@ const Teams = () => {
       {/* Teams Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeams.map((team) => (
-              <TeamCard key={team.id} team={team} />
-            ))}
-          </div>
+          {filteredTeams.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">No constructor standings data available for 2025 season</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTeams.map((team) => (
+                <TeamCard key={team.id} team={team} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
