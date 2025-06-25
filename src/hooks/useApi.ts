@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const API_BASE_URL = "https://wcgrdwsndxjkpfgcnbhx.supabase.co/functions/v1";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZ3Jkd3NuZHhqa3BmZ2NuYmh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2MDU3NDEsImV4cCI6MjA2NjE4MTc0MX0.EDNbLn1UdVAx85xv6Lh0TKGTgZX4vnzp4a-zt9qS3XM";
 
 // Generic API hook for GET requests
 export const useApiQuery = <T>(
@@ -23,6 +24,8 @@ export const useApiQuery = <T>(
       const response = await fetch(url.toString(), {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
         },
       });
 
@@ -50,6 +53,8 @@ export const useApiMutation = (
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
         },
         body: method !== 'DELETE' ? JSON.stringify(data) : undefined,
       });
