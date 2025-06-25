@@ -1,4 +1,3 @@
-
 import DriverCard from "@/components/DriverCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,13 +8,14 @@ const Drivers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
 
+  // Updated 2025 driver standings with correct team pairings
   const drivers = [
     {
       id: "1",
       name: "Max Verstappen",
       team: "Red Bull Racing",
       position: 1,
-      points: 575,
+      points: 0, // 2025 season just started
       nationality: "Netherlands",
       number: 1,
       teamColor: "#001F5B",
@@ -23,15 +23,15 @@ const Drivers = () => {
       trend: "stable" as const
     },
     {
-      id: "2",
+      id: "2", 
       name: "Lewis Hamilton",
-      team: "Mercedes",
+      team: "Ferrari", // Moved to Ferrari in 2025
       position: 2,
-      points: 234,
-      nationality: "United Kingdom", 
+      points: 0,
+      nationality: "United Kingdom",
       number: 44,
-      teamColor: "#C0C0C0",
-      lastRacePosition: 3,
+      teamColor: "#DC143C",
+      lastRacePosition: 2,
       trend: "up" as const
     },
     {
@@ -39,47 +39,95 @@ const Drivers = () => {
       name: "Charles Leclerc",
       team: "Ferrari",
       position: 3,
-      points: 206,
+      points: 0,
       nationality: "Monaco",
       number: 16,
       teamColor: "#DC143C",
-      lastRacePosition: 2,
-      trend: "down" as const
-    },
-    {
-      id: "4",
-      name: "George Russell",
-      team: "Mercedes",
-      position: 4,
-      points: 175,
-      nationality: "United Kingdom",
-      number: 63,
-      teamColor: "#C0C0C0",
-      lastRacePosition: 4,
+      lastRacePosition: 3,
       trend: "stable" as const
     },
     {
-      id: "5",
-      name: "Carlos Sainz",
-      team: "Ferrari",
-      position: 5,
-      points: 153,
-      nationality: "Spain",
-      number: 55,
-      teamColor: "#DC143C",
-      lastRacePosition: 5,
+      id: "4",
+      name: "Liam Lawson", // Replaced Sergio Perez at Red Bull
+      team: "Red Bull Racing",
+      position: 4,
+      points: 0,
+      nationality: "New Zealand",
+      number: 30,
+      teamColor: "#001F5B",
+      lastRacePosition: 4,
       trend: "up" as const
     },
     {
+      id: "5",
+      name: "George Russell",
+      team: "Mercedes",
+      position: 5,
+      points: 0,
+      nationality: "United Kingdom",
+      number: 63,
+      teamColor: "#C0C0C0",
+      lastRacePosition: 5,
+      trend: "stable" as const
+    },
+    {
       id: "6",
-      name: "Sergio Pérez",
-      team: "Red Bull Racing",
+      name: "Kimi Antonelli", // New Mercedes driver replacing Hamilton
+      team: "Mercedes",
       position: 6,
-      points: 285,
-      nationality: "Mexico",
-      number: 11,
-      teamColor: "#001F5B",
+      points: 0,
+      nationality: "Italy",
+      number: 12,
+      teamColor: "#C0C0C0",
       lastRacePosition: 6,
+      trend: "up" as const
+    },
+    {
+      id: "7",
+      name: "Lando Norris",
+      team: "McLaren",
+      position: 7,
+      points: 0,
+      nationality: "United Kingdom",
+      number: 4,
+      teamColor: "#FF6600",
+      lastRacePosition: 7,
+      trend: "stable" as const
+    },
+    {
+      id: "8",
+      name: "Oscar Piastri",
+      team: "McLaren",
+      position: 8,
+      points: 0,
+      nationality: "Australia",
+      number: 81,
+      teamColor: "#FF6600",
+      lastRacePosition: 8,
+      trend: "up" as const
+    },
+    {
+      id: "9",
+      name: "Fernando Alonso",
+      team: "Aston Martin",
+      position: 9,
+      points: 0,
+      nationality: "Spain",
+      number: 14,
+      teamColor: "#00A693",
+      lastRacePosition: 9,
+      trend: "stable" as const
+    },
+    {
+      id: "10",
+      name: "Lance Stroll",
+      team: "Aston Martin",
+      position: 10,
+      points: 0,
+      nationality: "Canada",
+      number: 18,
+      teamColor: "#00A693",
+      lastRacePosition: 10,
       trend: "down" as const
     }
   ];
@@ -119,7 +167,7 @@ const Drivers = () => {
               Driver Standings
             </h1>
             <p className="text-xl text-muted-foreground">
-              2024 Formula 1 World Championship
+              2025 Formula 1 World Championship
             </p>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import TeamCard from "@/components/TeamCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,66 +8,107 @@ const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("position");
 
+  // Updated 2025 constructor standings with correct driver pairings
   const teams = [
     {
       id: "1",
       name: "Red Bull Racing",
       position: 1,
-      points: 860,
+      points: 0, // 2025 season just started
       color: "#001F5B",
-      drivers: ["Max Verstappen", "Sergio Pérez"],
-      wins: 21,
-      podiums: 35
+      drivers: ["Max Verstappen", "Liam Lawson"], // Updated pairing
+      wins: 0,
+      podiums: 0
     },
     {
       id: "2",
-      name: "Mercedes",
+      name: "Ferrari",
       position: 2,
-      points: 409,
-      color: "#C0C0C0",
-      drivers: ["Lewis Hamilton", "George Russell"],
-      wins: 1,
-      podiums: 8
+      points: 0,
+      color: "#DC143C", 
+      drivers: ["Lewis Hamilton", "Charles Leclerc"], // Hamilton moved to Ferrari
+      wins: 0,
+      podiums: 0
     },
     {
       id: "3",
-      name: "Ferrari",
+      name: "Mercedes",
       position: 3,
-      points: 359,
-      color: "#DC143C",
-      drivers: ["Charles Leclerc", "Carlos Sainz"],
-      wins: 1,
-      podiums: 12
+      points: 0,
+      color: "#C0C0C0",
+      drivers: ["George Russell", "Kimi Antonelli"], // Antonelli replaced Hamilton
+      wins: 0,
+      podiums: 0
     },
     {
       id: "4",
       name: "McLaren",
       position: 4,
-      points: 302,
+      points: 0,
       color: "#FF6600",
       drivers: ["Lando Norris", "Oscar Piastri"],
       wins: 0,
-      podiums: 7
+      podiums: 0
     },
     {
       id: "5",
       name: "Aston Martin",
       position: 5,
-      points: 280,
+      points: 0,
       color: "#00A693",
       drivers: ["Fernando Alonso", "Lance Stroll"],
       wins: 0,
-      podiums: 8
+      podiums: 0
     },
     {
       id: "6",
       name: "Alpine",
       position: 6,
-      points: 120,
+      points: 0,
       color: "#0070C0",
-      drivers: ["Pierre Gasly", "Esteban Ocon"],
+      drivers: ["Pierre Gasly", "Jack Doohan"], // Doohan replaced Ocon
       wins: 0,
-      podiums: 2
+      podiums: 0
+    },
+    {
+      id: "7",
+      name: "Williams",
+      position: 7,
+      points: 0,
+      color: "#005AFF",
+      drivers: ["Alex Albon", "Carlos Sainz"], // Sainz moved to Williams
+      wins: 0,
+      podiums: 0
+    },
+    {
+      id: "8",
+      name: "RB",
+      position: 8,
+      points: 0,
+      color: "#6692FF",
+      drivers: ["Yuki Tsunoda", "Isack Hadjar"], // New pairing
+      wins: 0,
+      podiums: 0
+    },
+    {
+      id: "9",
+      name: "Haas",
+      position: 9,
+      points: 0,
+      color: "#B6BABD",
+      drivers: ["Esteban Ocon", "Oliver Bearman"], // Ocon moved to Haas
+      wins: 0,
+      podiums: 0
+    },
+    {
+      id: "10",
+      name: "Sauber",
+      position: 10,
+      points: 0,
+      color: "#52E252",
+      drivers: ["Nico Hülkenberg", "Gabriel Bortoleto"], // New lineup
+      wins: 0,
+      podiums: 0
     }
   ];
 
@@ -108,7 +148,7 @@ const Teams = () => {
               Constructor Standings
             </h1>
             <p className="text-xl text-muted-foreground">
-              2024 Formula 1 World Championship Teams
+              2025 Formula 1 World Championship Teams
             </p>
           </div>
         </div>

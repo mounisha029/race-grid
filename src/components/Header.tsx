@@ -42,6 +42,14 @@ const Header = ({ onSearchClick }: HeaderProps) => {
     { name: "Races", href: "/races", icon: Calendar },
   ];
 
+  // Fix theme toggle by adding proper handling
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    // Force a re-render by updating the document class
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
@@ -94,14 +102,19 @@ const Header = ({ onSearchClick }: HeaderProps) => {
               <Search className="w-4 h-4" />
             </Button>
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle - Fixed */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              onClick={toggleTheme}
               className="w-9 h-9"
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </Button>
 
             {/* User Profile Dropdown */}

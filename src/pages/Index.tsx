@@ -20,7 +20,7 @@ const Index = () => {
   // Get next upcoming race from 2025 calendar
   const nextRace = races.find(race => new Date(race.date) > new Date()) || races[0];
 
-  // Updated driver data for 2025
+  // Updated driver data for 2025 with correct standings and team pairings
   const topDrivers = [
     {
       id: "1",
@@ -37,7 +37,7 @@ const Index = () => {
     {
       id: "2", 
       name: "Lewis Hamilton",
-      team: "Ferrari",
+      team: "Ferrari", // Moved to Ferrari in 2025
       position: 2,
       points: 0,
       nationality: "United Kingdom",
@@ -60,7 +60,7 @@ const Index = () => {
     }
   ];
 
-  // Updated team data for 2025
+  // Updated team data for 2025 with correct driver pairings
   const topTeams = [
     {
       id: "1",
@@ -68,7 +68,7 @@ const Index = () => {
       position: 1,
       points: 0,
       color: "#0600EF",
-      drivers: ["Max Verstappen", "Sergio Pérez"],
+      drivers: ["Max Verstappen", "Liam Lawson"], // Updated pairing - Lawson replaced Perez
       wins: 0,
       podiums: 0
     },
@@ -78,7 +78,7 @@ const Index = () => {
       position: 2,
       points: 0,
       color: "#DC143C", 
-      drivers: ["Lewis Hamilton", "Charles Leclerc"],
+      drivers: ["Lewis Hamilton", "Charles Leclerc"], // Hamilton moved to Ferrari
       wins: 0,
       podiums: 0
     }
