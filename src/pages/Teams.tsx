@@ -1,10 +1,10 @@
-
 import TeamCard from "@/components/TeamCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Users } from "lucide-react";
 import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
+import { ChampionshipResponse, ConstructorStanding, TeamsResponse } from "@/types/api";
 
 const Teams = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,10 +16,14 @@ const Teams = () => {
 
   const isLoading = championshipLoading || teamsLoading;
 
-  // Transform API data to match our component interface
-  const teams = championshipData?.standings?.map((standing: any) => {
+  // Transform API data to match our component interface with proper type assertions
+  const championshipResponse = championshipData as ChampionshipResponse | undefined;
+  const constructorStandings = championshipResponse?.standings as ConstructorStanding[] | undefined;
+  const teamsResponse = teamsData as TeamsResponse | undefined;
+
+  const teams = constructorStandings?.map((standing) => {
     // Find team details from teams API
-    const teamDetails = teamsData?.teams?.find((team: any) => team.id === standing.entity_id);
+    const teamDetails = teamsResponse?.teams?.find((team) => team.id === standing.entity_id);
     
     return {
       id: standing.id,
@@ -27,7 +31,7 @@ const Teams = () => {
       position: standing.position,
       points: standing.points || 0,
       color: standing.teams?.primary_color || teamDetails?.primary_color || "#666666",
-      drivers: teamDetails?.drivers?.map((driver: any) => `${driver.first_name} ${driver.last_name}`) || [],
+      drivers: teamDetails?.drivers?.map((driver) => `${driver.first_name} ${driver.last_name}`) || [],
       wins: standing.wins || 0,
       podiums: standing.podiums || 0
     };

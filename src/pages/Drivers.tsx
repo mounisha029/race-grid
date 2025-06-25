@@ -1,10 +1,10 @@
-
 import DriverCard from "@/components/DriverCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Trophy } from "lucide-react";
 import { useChampionshipStandings } from "@/hooks/useApi";
+import { ChampionshipResponse, DriverStanding } from "@/types/api";
 
 const Drivers = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,10 +13,13 @@ const Drivers = () => {
   // Fetch 2025 driver championship standings
   const { data: championshipData, isLoading, error } = useChampionshipStandings("2025", "drivers");
 
-  // Transform API data to match our component interface
-  const drivers = championshipData?.standings?.map((standing: any) => ({
+  // Transform API data to match our component interface with proper type assertion
+  const championshipResponse = championshipData as ChampionshipResponse | undefined;
+  const driverStandings = championshipResponse?.standings as DriverStanding[] | undefined;
+
+  const drivers = driverStandings?.map((standing) => ({
     id: standing.id,
-    name: `${standing.drivers?.first_name} ${standing.drivers?.last_name}`,
+    name: `${standing.drivers?.first_name || ''} ${standing.drivers?.last_name || ''}`,
     team: standing.drivers?.teams?.name || "Unknown Team",
     position: standing.position,
     points: standing.points || 0,

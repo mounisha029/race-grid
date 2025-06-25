@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import RaceCard from "@/components/RaceCard";
 import DriverCard from "@/components/DriverCard";
@@ -8,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flag, Trophy, Clock, TrendingUp } from "lucide-react";
 import { useRaces } from "@/hooks/useRaces";
 import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
+import { ChampionshipResponse, DriverStanding, ConstructorStanding, TeamsResponse } from "@/types/api";
 
 const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -26,10 +26,13 @@ const Index = () => {
   // Get next upcoming race from 2025 calendar
   const nextRace = races.find(race => new Date(race.date) > new Date()) || races[0];
 
-  // Transform driver championship data to match component interface
-  const topDrivers = driverChampionshipData?.standings?.slice(0, 3).map((standing: any) => ({
+  // Transform driver championship data to match component interface with proper type assertions
+  const driverChampionshipResponse = driverChampionshipData as ChampionshipResponse | undefined;
+  const driverStandings = driverChampionshipResponse?.standings as DriverStanding[] | undefined;
+
+  const topDrivers = driverStandings?.slice(0, 3).map((standing) => ({
     id: standing.id,
-    name: `${standing.drivers?.first_name} ${standing.drivers?.last_name}`,
+    name: `${standing.drivers?.first_name || ''} ${standing.drivers?.last_name || ''}`,
     team: standing.drivers?.teams?.name || "Unknown Team",
     position: standing.position,
     points: standing.points || 0,
@@ -40,9 +43,13 @@ const Index = () => {
     trend: "stable" as const
   })) || [];
 
-  // Transform constructor championship data to match component interface
-  const topTeams = constructorChampionshipData?.standings?.slice(0, 2).map((standing: any) => {
-    const teamDetails = teamsData?.teams?.find((team: any) => team.id === standing.entity_id);
+  // Transform constructor championship data to match component interface with proper type assertions
+  const constructorChampionshipResponse = constructorChampionshipData as ChampionshipResponse | undefined;
+  const constructorStandings = constructorChampionshipResponse?.standings as ConstructorStanding[] | undefined;
+  const teamsResponse = teamsData as TeamsResponse | undefined;
+  
+  const topTeams = constructorStandings?.slice(0, 2).map((standing) => {
+    const teamDetails = teamsResponse?.teams?.find((team) => team.id === standing.entity_id);
     
     return {
       id: standing.id,
@@ -50,7 +57,7 @@ const Index = () => {
       position: standing.position,
       points: standing.points || 0,
       color: standing.teams?.primary_color || teamDetails?.primary_color || "#666666",
-      drivers: teamDetails?.drivers?.map((driver: any) => `${driver.first_name} ${driver.last_name}`) || [],
+      drivers: teamDetails?.drivers?.map((driver) => `${driver.first_name} ${driver.last_name}`) || [],
       wins: standing.wins || 0,
       podiums: standing.podiums || 0
     };
