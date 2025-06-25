@@ -80,7 +80,7 @@ const CommunityPolls = ({ raceId }: CommunityPollsProps) => {
           return {
             id: poll.id,
             question: poll.question,
-            options: Array.isArray(poll.options) ? poll.options : [],
+            options: Array.isArray(poll.options) ? poll.options.map(option => String(option)) : [],
             votes: typeof poll.votes === 'object' && poll.votes !== null ? poll.votes as Record<string, number> : {},
             total_votes: poll.total_votes || 0,
             ends_at: poll.ends_at,
