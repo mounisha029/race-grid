@@ -16,6 +16,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import Layout from "@/components/Layout";
 
 const queryClient = new QueryClient();
@@ -23,29 +24,31 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/drivers" element={<Drivers />} />
-                <Route path="/drivers/:id" element={<DriverProfile />} />
-                <Route path="/teams" element={<Teams />} />
-                <Route path="/teams/:id" element={<TeamProfile />} />
-                <Route path="/races" element={<Races />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/social" element={<Social />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-          </BrowserRouter>
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="f1-box-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/drivers" element={<Drivers />} />
+                  <Route path="/drivers/:id" element={<DriverProfile />} />
+                  <Route path="/teams" element={<Teams />} />
+                  <Route path="/teams/:id" element={<TeamProfile />} />
+                  <Route path="/races" element={<Races />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/social" element={<Social />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </BrowserRouter>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
