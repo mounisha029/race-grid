@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { 
   Calendar, 
   Trophy, 
@@ -42,12 +42,8 @@ const Header = ({ onSearchClick }: HeaderProps) => {
     { name: "Races", href: "/races", icon: Calendar },
   ];
 
-  // Fix theme toggle by adding proper handling
   const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    // Force a re-render by updating the document class
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   return (
@@ -102,7 +98,7 @@ const Header = ({ onSearchClick }: HeaderProps) => {
               <Search className="w-4 h-4" />
             </Button>
 
-            {/* Theme Toggle - Fixed */}
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="sm"
