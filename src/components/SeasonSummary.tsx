@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -26,7 +25,7 @@ const SeasonSummary = () => {
     completedRaces: 16,
     sprintWeekends: 6,
     differentWinners: 6,
-    polePositions: { McLaren: 7, Red Bull: 2, Ferrari: 3, Mercedes: 2, Others: 2 }
+    polePositions: { "McLaren": 7, "Red Bull": 2, "Ferrari": 3, "Mercedes": 2, "Others": 2 }
   };
 
   return (
