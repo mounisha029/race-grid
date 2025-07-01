@@ -14,6 +14,17 @@ interface UserPreferences {
   updated_at: string;
 }
 
+interface DatabaseUserPreferences {
+  id: string;
+  user_id: string;
+  notifications_enabled: boolean;
+  timezone: string;
+  dark_mode: boolean;
+  theme?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useUserPreferences = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -25,6 +36,18 @@ export const useUserPreferences = () => {
       fetchPreferences();
     }
   }, [user]);
+
+  const mapDatabaseToInterface = (dbPrefs: DatabaseUserPreferences): UserPreferences => {
+    return {
+      id: dbPrefs.id,
+      user_id: dbPrefs.user_id,
+      notifications: dbPrefs.notifications_enabled,
+      timezone: dbPrefs.timezone,
+      theme: dbPrefs.theme || (dbPrefs.dark_mode ? 'dark' : 'light'),
+      created_at: dbPrefs.created_at,
+      updated_at: dbPrefs.updated_at
+    };
+  };
 
   const fetchPreferences = async () => {
     if (!user) return;
@@ -42,7 +65,8 @@ export const useUserPreferences = () => {
       }
 
       if (data) {
-        setPreferences(data);
+        const mappedPreferences = mapDatabaseToInterface(data);
+        setPreferences(mappedPreferences);
       }
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -60,11 +84,27 @@ export const useUserPreferences = () => {
     if (!user) return false;
 
     try {
+      // Map interface fields back to database fields
+      const dbUpdates: any = {};
+      
+      if (updates.notifications !== undefined) {
+        dbUpdates.notifications_enabled = updates.notifications;
+      }
+      
+      if (updates.theme !== undefined) {
+        dbUpdates.theme = updates.theme;
+        dbUpdates.dark_mode = updates.theme === 'dark';
+      }
+      
+      if (updates.timezone !== undefined) {
+        dbUpdates.timezone = updates.timezone;
+      }
+
       const { data, error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: user.id,
-          ...updates,
+          ...dbUpdates,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -72,7 +112,8 @@ export const useUserPreferences = () => {
 
       if (error) throw error;
 
-      setPreferences(data);
+      const mappedPreferences = mapDatabaseToInterface(data);
+      setPreferences(mappedPreferences);
       toast({
         title: "Success",
         description: "Preferences updated successfully",
