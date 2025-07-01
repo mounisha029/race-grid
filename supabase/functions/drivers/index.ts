@@ -37,15 +37,20 @@ serve(async (req: Request) => {
           .select(`
             *,
             teams (
+              id,
               name,
+              full_name,
               primary_color,
-              secondary_color
+              secondary_color,
+              logo_url
             )
           `)
           .eq("is_active", true)
           .order("position", { nullsFirst: false });
 
         if (error) throw error;
+
+        console.log(`Fetched ${drivers?.length || 0} drivers with correct 2025 team assignments`);
 
         return new Response(JSON.stringify({ drivers }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

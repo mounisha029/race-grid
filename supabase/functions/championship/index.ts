@@ -26,7 +26,7 @@ serve(async (req: Request) => {
     console.log(`Fetching ${type} championship for season ${season}`);
 
     if (type === "drivers") {
-      // Get driver championship standings
+      // Get driver championship standings with updated 2025 data
       const { data: championships, error: champError } = await supabaseClient
         .from("championships")
         .select("*")
@@ -41,7 +41,7 @@ serve(async (req: Request) => {
 
       console.log(`Found ${championships?.length || 0} driver championships`);
 
-      // Get driver details for each championship entry
+      // Get driver details for each championship entry with team information
       const standings = [];
       for (const champ of championships || []) {
         const { data: driver, error: driverError } = await supabaseClient
@@ -52,7 +52,12 @@ serve(async (req: Request) => {
             driver_number,
             nationality,
             profile_image_url,
-            team_id
+            team_id,
+            teams (
+              name,
+              primary_color,
+              secondary_color
+            )
           `)
           .eq("id", champ.entity_id)
           .single();
@@ -62,21 +67,9 @@ serve(async (req: Request) => {
           continue;
         }
 
-        // For now, we'll assign teams to drivers based on championship position
-        // This is a temporary solution until we properly link drivers to teams
-        const teamNames = ['Mercedes', 'Red Bull', 'Ferrari', 'McLaren', 'Alpine'];
-        const teamColors = ['#00D2BE', '#0600EF', '#DC143C', '#FF8700', '#0090FF'];
-        const teamIndex = (champ.position - 1) % teamNames.length;
-
         standings.push({
           ...champ,
-          drivers: {
-            ...driver,
-            teams: {
-              name: teamNames[teamIndex],
-              primary_color: teamColors[teamIndex]
-            }
-          }
+          drivers: driver
         });
       }
 
@@ -89,7 +82,7 @@ serve(async (req: Request) => {
         status: 200,
       });
     } else {
-      // Get constructor championship standings
+      // Get constructor championship standings with updated 2025 data
       const { data: championships, error: champError } = await supabaseClient
         .from("championships")
         .select("*")

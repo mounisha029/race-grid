@@ -1,171 +1,171 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Trophy, Users, Flag, Zap } from "lucide-react";
+import { Trophy, Flag, Users, Calendar, Crown, Star } from "lucide-react";
+import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
+import { useRaces } from "@/hooks/useRaces";
+import { ChampionshipResponse, DriverStanding, ConstructorStanding, TeamsResponse } from "@/types/api";
 
 const SeasonSummary = () => {
-  const topDrivers = [
-    { position: 1, name: "Oscar Piastri", team: "McLaren", points: 285, wins: 4, color: "#FF8700" },
-    { position: 2, name: "Max Verstappen", team: "Red Bull", points: 268, wins: 3, color: "#0600EF" },
-    { position: 3, name: "Lando Norris", team: "McLaren", points: 245, wins: 2, color: "#FF8700" },
-    { position: 4, name: "Lewis Hamilton", team: "Ferrari", points: 198, wins: 1, color: "#DC143C" },
-    { position: 5, name: "Charles Leclerc", team: "Ferrari", points: 187, wins: 2, color: "#DC143C" },
-  ];
+  const { data: driverChampionshipData } = useChampionshipStandings("2025", "drivers");
+  const { data: constructorChampionshipData } = useChampionshipStandings("2025", "constructors");
+  const { data: teamsData } = useTeams();
+  const { data: races = [] } = useRaces(2025);
 
-  const topTeams = [
-    { position: 1, name: "McLaren", points: 530, wins: 6, color: "#FF8700" },
-    { position: 2, name: "Red Bull", points: 396, wins: 3, color: "#0600EF" },
-    { position: 3, name: "Ferrari", points: 385, wins: 3, color: "#DC143C" },
-    { position: 4, name: "Mercedes", points: 354, wins: 0, color: "#00D2BE" },
-    { position: 5, name: "Aston Martin", points: 174, wins: 0, color: "#006F62" },
-  ];
+  const championshipResponse = driverChampionshipData as ChampionshipResponse | undefined;
+  const driverStandings = championshipResponse?.standings as DriverStanding[] | undefined;
+  
+  const constructorResponse = constructorChampionshipData as ChampionshipResponse | undefined;
+  const constructorStandings = constructorResponse?.standings as ConstructorStanding[] | undefined;
+  
+  const teamsResponse = teamsData as TeamsResponse | undefined;
 
-  const seasonStats = {
-    totalRaces: 24,
-    completedRaces: 16,
-    sprintWeekends: 6,
-    differentWinners: 6,
-    polePositions: { "McLaren": 7, "Red Bull": 2, "Ferrari": 3, "Mercedes": 2, "Others": 2 }
-  };
+  const completedRaces = races.filter(race => race.status === 'completed').length;
+  const totalRaces = races.length;
+  const upcomingRaces = races.filter(race => race.status === 'scheduled').length;
+
+  const driverLeader = driverStandings?.[0];
+  const constructorLeader = constructorStandings?.[0];
+
+  // Get team details for constructor leader
+  const leadingTeam = teamsResponse?.teams?.find(team => team.id === constructorLeader?.entity_id);
 
   return (
     <div className="space-y-6">
-      {/* Season Overview */}
-      <Card className="racing-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Flag className="w-5 h-5 text-f1-red" />
-            <span>2025 Season Overview</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-f1-red">{seasonStats.completedRaces}</div>
-              <div className="text-sm text-muted-foreground">Races Completed</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-f1-orange">{seasonStats.totalRaces}</div>
-              <div className="text-sm text-muted-foreground">Total Races</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-f1-yellow">{seasonStats.sprintWeekends}</div>
-              <div className="text-sm text-muted-foreground">Sprint Weekends</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-f1-green">{seasonStats.differentWinners}</div>
-              <div className="text-sm text-muted-foreground">Different Winners</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center space-y-2">
+        <h2 className="racing-text text-3xl md:text-4xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
+          2025 Season Overview
+        </h2>
+        <p className="text-muted-foreground text-lg">
+          An incredible championship battle unfolds with Max Verstappen leading the charge
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top 5 Drivers */}
-        <Card className="racing-card">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-f1-red" />
-              <span>Top 5 Drivers</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {topDrivers.map((driver, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ backgroundColor: driver.color }}
-                    >
-                      {driver.position}
-                    </div>
-                    <div>
-                      <div className="font-medium">{driver.name}</div>
-                      <div className="text-sm text-muted-foreground">{driver.team}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">{driver.points} pts</div>
-                    <div className="text-sm text-muted-foreground">{driver.wins} wins</div>
-                  </div>
-                </div>
-                {index < topDrivers.length - 1 && <Separator className="mt-3" />}
-              </div>
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-f1-red/10 to-f1-orange/10">
+          <CardContent className="p-6 text-center">
+            <Calendar className="w-8 h-8 mx-auto mb-2 text-f1-red" />
+            <div className="text-2xl font-bold">{completedRaces}</div>
+            <div className="text-sm text-muted-foreground">Races Completed</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {upcomingRaces} remaining
+            </div>
           </CardContent>
         </Card>
 
-        {/* Top 5 Teams */}
-        <Card className="racing-card">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Trophy className="w-5 h-5 text-f1-orange" />
-              <span>Top 5 Constructors</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {topTeams.map((team, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ backgroundColor: team.color }}
-                    >
-                      {team.position}
-                    </div>
-                    <div className="font-medium">{team.name}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">{team.points} pts</div>
-                    <div className="text-sm text-muted-foreground">{team.wins} wins</div>
-                  </div>
-                </div>
-                {index < topTeams.length - 1 && <Separator className="mt-3" />}
-              </div>
-            ))}
+        <Card className="bg-gradient-to-br from-f1-yellow/10 to-f1-orange/10">
+          <CardContent className="p-6 text-center">
+            <Crown className="w-8 h-8 mx-auto mb-2 text-f1-yellow" />
+            <div className="text-lg font-bold">
+              {driverLeader?.drivers?.first_name} {driverLeader?.drivers?.last_name}
+            </div>
+            <div className="text-sm text-muted-foreground">Championship Leader</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {driverLeader?.points} points
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-f1-orange/10 to-f1-red/10">
+          <CardContent className="p-6 text-center">
+            <Users className="w-8 h-8 mx-auto mb-2 text-f1-orange" />
+            <div className="text-lg font-bold">
+              {constructorLeader?.teams?.name || leadingTeam?.name}
+            </div>
+            <div className="text-sm text-muted-foreground">Leading Constructor</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {constructorLeader?.points} points
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-f1-green/10 to-f1-yellow/10">
+          <CardContent className="p-6 text-center">
+            <Trophy className="w-8 h-8 mx-auto mb-2 text-f1-green" />
+            <div className="text-2xl font-bold">
+              {driverStandings?.reduce((total, driver) => total + (driver.wins || 0), 0)}
+            </div>
+            <div className="text-sm text-muted-foreground">Total Wins</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Across all drivers
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Key Storylines */}
-      <Card className="racing-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Zap className="w-5 h-5 text-f1-yellow" />
-            <span>2025 Season Storylines</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
-              <h4 className="font-semibold text-orange-600 mb-2">Oscar's Breakthrough</h4>
-              <p className="text-sm text-muted-foreground">
-                Oscar Piastri leads the championship in his third season, showcasing McLaren's resurgence with 4 wins and 12 podiums.
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Star className="w-5 h-5 text-f1-yellow" />
+              <span>Season Highlights</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Badge className="bg-f1-red text-white">Breaking News</Badge>
+              <p className="text-sm">
+                <strong>Lewis Hamilton</strong> makes his Ferrari debut, bringing his experience to the Scuderia alongside Charles Leclerc.
               </p>
             </div>
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-              <h4 className="font-semibold text-red-600 mb-2">Lewis at Ferrari</h4>
-              <p className="text-sm text-muted-foreground">
-                Lewis Hamilton's move to Ferrari brings experience and speed, currently P4 in the championship with 1 win.
+            <div className="space-y-2">
+              <Badge className="bg-f1-orange text-white">Team Moves</Badge>
+              <p className="text-sm">
+                <strong>Carlos Sainz Jr</strong> joins Mercedes as their new driver, partnering with George Russell.
               </p>
             </div>
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <h4 className="font-semibold text-blue-600 mb-2">McLaren Dominance</h4>
-              <p className="text-sm text-muted-foreground">
-                McLaren leads both championships with Piastri and Norris forming a formidable partnership.
+            <div className="space-y-2">
+              <Badge className="bg-f1-yellow text-black">Rising Star</Badge>
+              <p className="text-sm">
+                <strong>Liam Lawson</strong> secures his spot at RB, showing impressive pace in his rookie season.
               </p>
             </div>
-            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <h4 className="font-semibold text-purple-600 mb-2">Tight Midfield</h4>
-              <p className="text-sm text-muted-foreground">
-                Mercedes, Aston Martin, and Alpine battle for best-of-the-rest behind the top 3 teams.
+            <div className="space-y-2">
+              <Badge className="bg-f1-green text-white">Championship Battle</Badge>
+              <p className="text-sm">
+                <strong>Max Verstappen</strong> leads the championship but faces fierce competition from McLaren's Lando Norris.
               </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Flag className="w-5 h-5 text-f1-red" />
+              <span>Key Statistics</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-muted/30 rounded-lg">
+                <div className="text-xl font-bold text-f1-red">
+                  {Math.round(((completedRaces / totalRaces) * 100))}%
+                </div>
+                <div className="text-xs text-muted-foreground">Season Complete</div>
+              </div>
+              <div className="text-center p-3 bg-muted/30 rounded-lg">
+                <div className="text-xl font-bold text-f1-orange">
+                  {driverStandings?.filter(d => (d.wins || 0) > 0).length || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Different Winners</div>
+              </div>
+              <div className="text-center p-3 bg-muted/30 rounded-lg">
+                <div className="text-xl font-bold text-f1-yellow">
+                  {constructorStandings?.filter(c => (c.wins || 0) > 0).length || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Winning Teams</div>
+              </div>
+              <div className="text-center p-3 bg-muted/30 rounded-lg">
+                <div className="text-xl font-bold text-f1-green">
+                  {races.filter(r => r.is_sprint_weekend).length}
+                </div>
+                <div className="text-xs text-muted-foreground">Sprint Weekends</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

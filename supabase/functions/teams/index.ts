@@ -19,12 +19,27 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    console.log("Fetching teams data");
+    console.log("Fetching teams data with correct 2025 driver lineups");
 
-    // Get all teams
+    // Get all teams with their actual drivers
     const { data: teams, error: teamsError } = await supabaseClient
       .from("teams")
-      .select("*")
+      .select(`
+        *,
+        drivers (
+          id,
+          first_name,
+          last_name,
+          driver_number,
+          nationality,
+          profile_image_url,
+          points,
+          position,
+          wins,
+          podiums
+        )
+      `)
+      .eq("is_active", true)
       .order("position");
 
     if (teamsError) {
@@ -32,28 +47,10 @@ serve(async (req: Request) => {
       throw teamsError;
     }
 
-    console.log(`Found ${teams?.length || 0} teams`);
-
-    // For each team, add mock driver data since we don't have proper team-driver relationships yet
-    const teamsWithDrivers = teams?.map((team, index) => {
-      const driverPairs = [
-        [{ first_name: "Lewis", last_name: "Hamilton" }, { first_name: "George", last_name: "Russell" }],
-        [{ first_name: "Max", last_name: "Verstappen" }, { first_name: "Sergio", last_name: "Pérez" }],
-        [{ first_name: "Charles", last_name: "Leclerc" }, { first_name: "Carlos", last_name: "Sainz" }],
-        [{ first_name: "Lando", last_name: "Norris" }, { first_name: "Oscar", last_name: "Piastri" }],
-        [{ first_name: "Fernando", last_name: "Alonso" }, { first_name: "Lance", last_name: "Stroll" }]
-      ];
-      
-      const drivers = driverPairs[index % driverPairs.length] || [];
-      
-      return {
-        ...team,
-        drivers
-      };
-    }) || [];
+    console.log(`Found ${teams?.length || 0} teams with their actual drivers`);
 
     return new Response(JSON.stringify({ 
-      teams: teamsWithDrivers 
+      teams: teams || []
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
