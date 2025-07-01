@@ -5,22 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Flag, Mail, Lock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Flag, Mail, Lock, AlertCircle } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import RegisterForm from "@/components/auth/RegisterForm";
+import EnhancedRegisterForm from "@/components/auth/EnhancedRegisterForm";
 
 const Login = () => {
-  const { signIn, user } = useAuth();
+  const { signIn, resetPassword, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -57,9 +63,13 @@ const Login = () => {
         }
       } else {
         toast({
-          title: "Welcome Back!",
+          title: "Welcome Back! 🏁",
           description: "You have successfully signed in.",
         });
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('f1-remember-me', 'true');
+        }
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -70,6 +80,39 @@ const Login = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResetLoading(true);
+
+    try {
+      const { error } = await resetPassword(resetEmail);
+      
+      if (error) {
+        toast({
+          title: "Reset Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Reset Email Sent",
+          description: "Check your email for password reset instructions.",
+        });
+        setShowResetForm(false);
+        setResetEmail('');
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Reset Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetLoading(false);
     }
   };
 
@@ -98,68 +141,130 @@ const Login = () => {
           </TabsList>
           
           <TabsContent value="login">
-            <Card className="racing-card">
-              <CardHeader className="text-center">
-                <CardTitle className="racing-text text-2xl">Welcome Back</CardTitle>
-                <CardDescription>
-                  Sign in to access your F1 racing dashboard
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        className="pl-10"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full speed-button"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "🏁 Signing In..." : "🏁 Sign In"}
-                  </Button>
-                </form>
+            {showResetForm ? (
+              <Card className="racing-card">
+                <CardHeader className="text-center">
+                  <CardTitle className="racing-text text-2xl">Reset Password</CardTitle>
+                  <CardDescription>
+                    Enter your email address and we'll send you a reset link
+                  </CardDescription>
+                </CardHeader>
                 
-                <div className="text-center mt-4">
-                  <Button variant="link" className="text-sm text-muted-foreground">
-                    Forgot your password?
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <CardContent>
+                  <form onSubmit={handlePasswordReset} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="resetEmail">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="resetEmail"
+                          type="email"
+                          placeholder="your.email@example.com"
+                          className="pl-10"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        type="submit" 
+                        className="flex-1 speed-button"
+                        disabled={isResetLoading}
+                      >
+                        {isResetLoading ? "Sending..." : "Send Reset Link"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowResetForm(false)}
+                        disabled={isResetLoading}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="racing-card">
+                <CardHeader className="text-center">
+                  <CardTitle className="racing-text text-2xl">Welcome Back</CardTitle>
+                  <CardDescription>
+                    Sign in to access your F1 racing dashboard
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="your.email@example.com"
+                          className="pl-10"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-10"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="remember" 
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      />
+                      <Label htmlFor="remember" className="text-sm">Remember me</Label>
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full speed-button"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "🏁 Signing In..." : "🏁 Sign In"}
+                    </Button>
+                  </form>
+                  
+                  <div className="text-center mt-4">
+                    <Button 
+                      variant="link" 
+                      className="text-sm text-muted-foreground hover:text-f1-red"
+                      onClick={() => setShowResetForm(true)}
+                    >
+                      Forgot your password?
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
           <TabsContent value="register">
-            <RegisterForm />
+            <EnhancedRegisterForm />
           </TabsContent>
         </Tabs>
         
