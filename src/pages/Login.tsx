@@ -12,7 +12,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import EnhancedRegisterForm from "@/components/auth/EnhancedRegisterForm";
 
 const Login = () => {
   const { signIn, resetPassword, user } = useAuth();
@@ -134,139 +133,132 @@ const Login = () => {
           </NavLink>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login">Sign In</TabsTrigger>
-            <TabsTrigger value="register">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            {showResetForm ? (
-              <Card className="racing-card">
-                <CardHeader className="text-center">
-                  <CardTitle className="racing-text text-2xl">Reset Password</CardTitle>
-                  <CardDescription>
-                    Enter your email address and we'll send you a reset link
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <form onSubmit={handlePasswordReset} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="resetEmail">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="resetEmail"
-                          type="email"
-                          placeholder="your.email@example.com"
-                          className="pl-10"
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        type="submit" 
-                        className="flex-1 speed-button"
-                        disabled={isResetLoading}
-                      >
-                        {isResetLoading ? "Sending..." : "Send Reset Link"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowResetForm(false)}
-                        disabled={isResetLoading}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="racing-card">
-                <CardHeader className="text-center">
-                  <CardTitle className="racing-text text-2xl">Welcome Back</CardTitle>
-                  <CardDescription>
-                    Sign in to access your F1 racing dashboard
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="your.email@example.com"
-                          className="pl-10"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder="••••••••"
-                          className="pl-10"
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="remember" 
-                        checked={rememberMe}
-                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                      />
-                      <Label htmlFor="remember" className="text-sm">Remember me</Label>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full speed-button"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "🏁 Signing In..." : "🏁 Sign In"}
-                    </Button>
-                  </form>
-                  
-                  <div className="text-center mt-4">
-                    <Button 
-                      variant="link" 
-                      className="text-sm text-muted-foreground hover:text-f1-red"
-                      onClick={() => setShowResetForm(true)}
-                    >
-                      Forgot your password?
-                    </Button>
+        {showResetForm ? (
+          <Card className="racing-card">
+            <CardHeader className="text-center">
+              <CardTitle className="racing-text text-2xl">Reset Password</CardTitle>
+              <CardDescription>
+                Enter your email address and we'll send you a reset link
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="resetEmail">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="resetEmail"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      className="pl-10"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                    />
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="register">
-            <EnhancedRegisterForm />
-          </TabsContent>
-        </Tabs>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    type="submit" 
+                    className="flex-1 speed-button"
+                    disabled={isResetLoading}
+                  >
+                    {isResetLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowResetForm(false)}
+                    disabled={isResetLoading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="racing-card">
+            <CardHeader className="text-center">
+              <CardTitle className="racing-text text-2xl">Welcome Back</CardTitle>
+              <CardDescription>
+                Sign in to access your F1 racing dashboard
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      className="pl-10"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember" 
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <Label htmlFor="remember" className="text-sm">Remember me</Label>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full speed-button"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "🏁 Signing In..." : "🏁 Sign In"}
+                </Button>
+              </form>
+              
+              <div className="text-center mt-4 space-y-2">
+                <Button 
+                  variant="link" 
+                  className="text-sm text-muted-foreground hover:text-f1-red"
+                  onClick={() => setShowResetForm(true)}
+                >
+                  Forgot your password?
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <NavLink to="/register" className="text-f1-red hover:underline">
+                    Sign up here
+                  </NavLink>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <div className="text-center mt-6">
           <NavLink 
