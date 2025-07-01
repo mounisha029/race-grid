@@ -37,7 +37,7 @@ const SeasonSummary = () => {
           2025 Season Overview
         </h2>
         <p className="text-muted-foreground text-lg">
-          An incredible championship battle unfolds with Max Verstappen leading the charge
+          Oscar Piastri leads an incredible championship battle with McLaren's dominant performance
         </p>
       </div>
 
@@ -103,27 +103,27 @@ const SeasonSummary = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Badge className="bg-f1-red text-white">Breaking News</Badge>
+              <Badge className="bg-f1-red text-white">Championship Leader</Badge>
               <p className="text-sm">
-                <strong>Lewis Hamilton</strong> makes his Ferrari debut, bringing his experience to the Scuderia alongside Charles Leclerc.
+                <strong>Oscar Piastri</strong> leads the championship with McLaren's exceptional performance, showcasing his talent in his second full season.
               </p>
             </div>
             <div className="space-y-2">
-              <Badge className="bg-f1-orange text-white">Team Moves</Badge>
+              <Badge className="bg-f1-orange text-white">Surprise Move</Badge>
               <p className="text-sm">
-                <strong>Carlos Sainz Jr</strong> joins Mercedes as their new driver, partnering with George Russell.
+                <strong>Carlos Sainz Jr</strong> joined Williams and has been instrumental in their improved performance, even securing a victory.
               </p>
             </div>
             <div className="space-y-2">
-              <Badge className="bg-f1-yellow text-black">Rising Star</Badge>
+              <Badge className="bg-f1-yellow text-black">Ferrari Struggles</Badge>
               <p className="text-sm">
-                <strong>Liam Lawson</strong> secures his spot at RB, showing impressive pace in his rookie season.
+                <strong>Ferrari</strong> is having a disappointing season, with both Leclerc and rookie Sargeant struggling to find pace.
               </p>
             </div>
             <div className="space-y-2">
-              <Badge className="bg-f1-green text-white">Championship Battle</Badge>
+              <Badge className="bg-f1-green text-white">McLaren Dominance</Badge>
               <p className="text-sm">
-                <strong>Max Verstappen</strong> leads the championship but faces fierce competition from McLaren's Lando Norris.
+                <strong>McLaren</strong> leads both championships with Piastri and Norris forming a formidable partnership.
               </p>
             </div>
           </CardContent>

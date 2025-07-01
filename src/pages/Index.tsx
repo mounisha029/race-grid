@@ -108,7 +108,7 @@ const Index = () => {
               2025 Championship Highlights
             </h2>
             <p className="text-muted-foreground text-lg">
-              Max Verstappen leads an incredible season with Red Bull's continued dominance
+              Oscar Piastri leads an incredible season with McLaren's dominant performance
             </p>
           </div>
           

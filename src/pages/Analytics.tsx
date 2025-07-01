@@ -1,153 +1,284 @@
 
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LapTimeAnalytics from "@/components/analytics/LapTimeAnalytics";
-import PositionAnalytics from "@/components/analytics/PositionAnalytics";
-import QualifyingVsRaceAnalytics from "@/components/analytics/QualifyingVsRaceAnalytics";
-import WeatherImpactAnalytics from "@/components/analytics/WeatherImpactAnalytics";
-import TireStrategyAnalytics from "@/components/analytics/TireStrategyAnalytics";
-import SeasonComparisonAnalytics from "@/components/analytics/SeasonComparisonAnalytics";
-import AnalyticsFilters from "@/components/analytics/AnalyticsFilters";
-import { BarChart3, Clock, MapPin, Cloud, Circle, Calendar, Filter } from "lucide-react";
-
-// Mock data - in a real app, this would come from your API
-const mockLapTimeData = [
-  { lap: 1, time: 92.5, driver: "Hamilton", tireCompound: "medium", position: 3 },
-  { lap: 2, time: 91.8, driver: "Hamilton", tireCompound: "medium", position: 2 },
-  { lap: 3, time: 91.2, driver: "Hamilton", tireCompound: "medium", position: 1 },
-  // Add more mock data...
-];
-
-const mockPositionData = [
-  { lap: 1, position: 3, driver: "Hamilton", gap: 0.5 },
-  { lap: 2, position: 2, driver: "Hamilton", gap: 0.2 },
-  { lap: 3, position: 1, driver: "Hamilton", gap: 0.0 },
-  // Add more mock data...
-];
-
-const mockQualifyingRaceData = [
-  { driver: "Hamilton", qualifyingPosition: 3, racePosition: 1, qualifyingTime: 91.2, raceTime: 5832.1, points: 25 },
-  { driver: "Verstappen", qualifyingPosition: 1, racePosition: 2, qualifyingTime: 90.8, raceTime: 5834.7, points: 18 },
-  // Add more mock data...
-];
-
-const mockWeatherData = [
-  { lap: 1, lapTime: 92.5, weather: 'dry' as const, temperature: 25, humidity: 60, windSpeed: 15, driver: "Hamilton" },
-  { lap: 2, lapTime: 91.8, weather: 'dry' as const, temperature: 26, humidity: 58, windSpeed: 12, driver: "Hamilton" },
-  // Add more mock data...
-];
-
-const mockTireData = [
-  { driver: "Hamilton", stint: 1, compound: 'medium' as const, stintLength: 25, averageLapTime: 91.5, degradation: 0.05, pitStopLap: 25 },
-  { driver: "Hamilton", stint: 2, compound: 'hard' as const, stintLength: 30, averageLapTime: 92.1, degradation: 0.02, pitStopLap: 55 },
-  // Add more mock data...
-];
-
-const mockSeasonData = [
-  { race: 1, season: 2024, points: 25, position: 1, driver: "Hamilton", team: "Mercedes" },
-  { race: 2, season: 2024, points: 18, position: 2, driver: "Hamilton", team: "Mercedes" },
-  { race: 1, season: 2025, points: 18, position: 2, driver: "Hamilton", team: "Mercedes" },
-  // Add more mock data...
-];
-
-const filterOptions = {
-  drivers: ["Hamilton", "Verstappen", "Leclerc", "Russell", "Sainz"],
-  teams: ["Mercedes", "Red Bull Racing", "Ferrari", "McLaren", "Aston Martin"],
-  seasons: [2023, 2024, 2025],
-  circuits: ["Monaco", "Silverstone", "Spa-Francorchamps", "Monza", "Suzuka"],
-  weatherConditions: ["dry", "wet", "mixed"]
-};
+import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { TrendingUp, Trophy, Users, Flag } from "lucide-react";
+import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
+import { ChampionshipResponse, DriverStanding, ConstructorStanding, TeamsResponse } from "@/types/api";
 
 const Analytics = () => {
-  const [activeFilters, setActiveFilters] = useState({});
+  const { data: driverChampionshipData, isLoading: driversLoading } = useChampionshipStandings("2025", "drivers");
+  const { data: constructorChampionshipData, isLoading: constructorsLoading } = useChampionshipStandings("2025", "constructors");
+  const { data: teamsData } = useTeams();
 
-  const handleFiltersChange = (filters: any) => {
-    setActiveFilters(filters);
-    // In a real app, you would trigger data refetch here
-  };
+  const championshipResponse = driverChampionshipData as ChampionshipResponse | undefined;
+  const driverStandings = championshipResponse?.standings as DriverStanding[] | undefined;
+  
+  const constructorResponse = constructorChampionshipData as ChampionshipResponse | undefined;
+  const constructorStandings = constructorResponse?.standings as ConstructorStanding[] | undefined;
+  
+  const teamsResponse = teamsData as TeamsResponse | undefined;
 
-  const handleResetFilters = () => {
-    setActiveFilters({});
-  };
+  // Prepare data for charts
+  const topDriversData = driverStandings?.slice(0, 10).map((standing) => ({
+    name: `${standing.drivers?.first_name?.charAt(0)}. ${standing.drivers?.last_name}`,
+    points: standing.points || 0,
+    wins: standing.wins || 0,
+    podiums: standing.podiums || 0,
+    team: standing.drivers?.teams?.name || "Unknown"
+  })) || [];
+
+  const constructorData = constructorStandings?.map((standing) => ({
+    name: standing.teams?.name || "Unknown",
+    points: standing.points || 0,
+    wins: standing.wins || 0,
+    podiums: standing.podiums || 0,
+    color: standing.teams?.primary_color || "#666666"
+  })) || [];
+
+  const COLORS = ['#FF8700', '#DC143C', '#0600EF', '#00D2BE', '#006F62', '#0090FF', '#FFFFFF', '#6692FF', '#005AFF', '#52E252'];
+
+  if (driversLoading || constructorsLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-f1-red mx-auto mb-4"></div>
+          <p className="text-lg">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold racing-text mb-2">F1 Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
-            Comprehensive performance analysis and insights for drivers, teams, and races
-          </p>
+      {/* Hero Header */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-f1-black via-slate-900 to-f1-black py-16">
+        <div className="absolute inset-0 bg-gradient-to-r from-f1-red/10 via-transparent to-f1-orange/10" />
+        <div className="racing-track absolute top-1/2 left-0 w-full h-px" />
+        
+        <div className="container mx-auto px-4 relative">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center mb-6">
+              <TrendingUp className="w-16 h-16 text-f1-green" />
+            </div>
+            <h1 className="racing-text text-4xl md:text-6xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
+              F1 Analytics
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Deep insights into the 2025 Formula 1 season performance
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div className="space-y-6">
-          <AnalyticsFilters
-            options={filterOptions}
-            activeFilters={activeFilters}
-            onFiltersChange={handleFiltersChange}
-            onReset={handleResetFilters}
-          />
-
-          <Tabs defaultValue="lap-times" className="space-y-6">
-            <TabsList className="grid grid-cols-6 w-full">
-              <TabsTrigger value="lap-times" className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Lap Times
+      {/* Analytics Content */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <Tabs defaultValue="drivers" className="space-y-8">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
+              <TabsTrigger value="drivers" className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Drivers</span>
               </TabsTrigger>
-              <TabsTrigger value="positions" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Positions
+              <TabsTrigger value="teams" className="flex items-center space-x-2">
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Teams</span>
               </TabsTrigger>
-              <TabsTrigger value="qualifying" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Qualifying vs Race
-              </TabsTrigger>
-              <TabsTrigger value="weather" className="flex items-center gap-2">
-                <Cloud className="w-4 h-4" />
-                Weather Impact
-              </TabsTrigger>
-              <TabsTrigger value="tires" className="flex items-center gap-2">
-                <Circle className="w-4 h-4" />
-                Tire Strategy
-              </TabsTrigger>
-              <TabsTrigger value="seasons" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Season Comparison
+              <TabsTrigger value="performance" className="flex items-center space-x-2">
+                <Flag className="w-4 h-4" />
+                <span className="hidden sm:inline">Performance</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="lap-times">
-              <LapTimeAnalytics 
-                data={mockLapTimeData} 
-                drivers={filterOptions.drivers}
-              />
+            <TabsContent value="drivers" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Driver Championship Points</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={topDriversData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="points" fill="#DC143C" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Race Wins Comparison</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={topDriversData.filter(d => d.wins > 0)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="wins" fill="#FF8700" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top 5 Drivers Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {topDriversData.slice(0, 5).map((driver, index) => (
+                      <div key={driver.name} className="text-center p-4 bg-muted/30 rounded-lg">
+                        <Badge className="mb-2">P{index + 1}</Badge>
+                        <h3 className="font-bold text-lg">{driver.name}</h3>
+                        <p className="text-sm text-muted-foreground">{driver.team}</p>
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xl font-bold text-f1-red">{driver.points}</div>
+                          <div className="text-xs text-muted-foreground">Points</div>
+                          <div className="text-sm">{driver.wins} wins</div>
+                          <div className="text-sm">{driver.podiums} podiums</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="positions">
-              <PositionAnalytics data={mockPositionData} />
+            <TabsContent value="teams" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Constructor Championship</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={constructorData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="points" fill="#0600EF" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Points Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <PieChart>
+                        <Pie
+                          data={constructorData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => `${name}: ${value}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="points"
+                        >
+                          {constructorData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Performance Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {constructorData.slice(0, 5).map((team, index) => (
+                      <div key={team.name} className="text-center p-4 bg-muted/30 rounded-lg">
+                        <Badge className="mb-2">P{index + 1}</Badge>
+                        <h3 className="font-bold text-lg">{team.name}</h3>
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xl font-bold text-f1-orange">{team.points}</div>
+                          <div className="text-xs text-muted-foreground">Points</div>
+                          <div className="text-sm">{team.wins} wins</div>
+                          <div className="text-sm">{team.podiums} podiums</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="qualifying">
-              <QualifyingVsRaceAnalytics data={mockQualifyingRaceData} />
-            </TabsContent>
+            <TabsContent value="performance" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Points Progression</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <LineChart data={topDriversData.slice(0, 5)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="points" stroke="#DC143C" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
 
-            <TabsContent value="weather">
-              <WeatherImpactAnalytics data={mockWeatherData} />
-            </TabsContent>
-
-            <TabsContent value="tires">
-              <TireStrategyAnalytics data={mockTireData} />
-            </TabsContent>
-
-            <TabsContent value="seasons">
-              <SeasonComparisonAnalytics 
-                data={mockSeasonData} 
-                availableSeasons={filterOptions.seasons}
-              />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Season Statistics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-f1-red/10 rounded-lg">
+                        <div className="text-2xl font-bold text-f1-red">
+                          {driverStandings?.reduce((total, driver) => total + (driver.wins || 0), 0)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Race Wins</div>
+                      </div>
+                      <div className="text-center p-4 bg-f1-orange/10 rounded-lg">
+                        <div className="text-2xl font-bold text-f1-orange">
+                          {driverStandings?.reduce((total, driver) => total + (driver.podiums || 0), 0)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Podiums</div>
+                      </div>
+                      <div className="text-center p-4 bg-f1-yellow/10 rounded-lg">
+                        <div className="text-2xl font-bold text-f1-yellow">
+                          {driverStandings?.filter(d => (d.wins || 0) > 0).length || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Different Winners</div>
+                      </div>
+                      <div className="text-center p-4 bg-f1-green/10 rounded-lg">
+                        <div className="text-2xl font-bold text-f1-green">
+                          {constructorStandings?.filter(c => (c.wins || 0) > 0).length || 0}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Winning Teams</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
-      </div>
+      </section>
     </div>
   );
 };
