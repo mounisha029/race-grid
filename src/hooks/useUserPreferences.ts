@@ -7,20 +7,21 @@ import { useToast } from '@/hooks/use-toast';
 interface UserPreferences {
   id: string;
   user_id: string;
-  notifications: boolean;
-  timezone: string;
-  theme: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface DatabaseUserPreferences {
-  id: string;
-  user_id: string;
   notifications_enabled: boolean;
   timezone: string;
-  dark_mode: boolean;
   theme?: string;
+  dark_mode: boolean;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  favorite_driver_id?: string;
+  favorite_team_id?: string;
+  favorite_drivers?: string[];
+  display_name?: string;
+  bio?: string;
+  profile_picture_url?: string;
+  onboarding_completed: boolean;
+  privacy_settings?: any;
+  two_factor_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -36,18 +37,6 @@ export const useUserPreferences = () => {
       fetchPreferences();
     }
   }, [user]);
-
-  const mapDatabaseToInterface = (dbPrefs: DatabaseUserPreferences): UserPreferences => {
-    return {
-      id: dbPrefs.id,
-      user_id: dbPrefs.user_id,
-      notifications: dbPrefs.notifications_enabled,
-      timezone: dbPrefs.timezone,
-      theme: dbPrefs.theme || (dbPrefs.dark_mode ? 'dark' : 'light'),
-      created_at: dbPrefs.created_at,
-      updated_at: dbPrefs.updated_at
-    };
-  };
 
   const fetchPreferences = async () => {
     if (!user) return;
@@ -65,8 +54,32 @@ export const useUserPreferences = () => {
       }
 
       if (data) {
-        const mappedPreferences = mapDatabaseToInterface(data);
-        setPreferences(mappedPreferences);
+        setPreferences(data);
+      } else {
+        // Create default preferences if none exist
+        const defaultPrefs = {
+          user_id: user.id,
+          notifications_enabled: true,
+          timezone: 'UTC',
+          dark_mode: true,
+          email_notifications: false,
+          push_notifications: true,
+          onboarding_completed: false,
+          two_factor_enabled: false,
+          privacy_settings: {
+            profile_visibility: 'public',
+            activity_visibility: 'friends'
+          }
+        };
+
+        const { data: newPrefs, error: createError } = await supabase
+          .from('user_preferences')
+          .insert(defaultPrefs)
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        setPreferences(newPrefs);
       }
     } catch (error) {
       console.error('Error fetching preferences:', error);
@@ -84,27 +97,11 @@ export const useUserPreferences = () => {
     if (!user) return false;
 
     try {
-      // Map interface fields back to database fields
-      const dbUpdates: any = {};
-      
-      if (updates.notifications !== undefined) {
-        dbUpdates.notifications_enabled = updates.notifications;
-      }
-      
-      if (updates.theme !== undefined) {
-        dbUpdates.theme = updates.theme;
-        dbUpdates.dark_mode = updates.theme === 'dark';
-      }
-      
-      if (updates.timezone !== undefined) {
-        dbUpdates.timezone = updates.timezone;
-      }
-
       const { data, error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: user.id,
-          ...dbUpdates,
+          ...updates,
           updated_at: new Date().toISOString()
         })
         .select()
@@ -112,8 +109,7 @@ export const useUserPreferences = () => {
 
       if (error) throw error;
 
-      const mappedPreferences = mapDatabaseToInterface(data);
-      setPreferences(mappedPreferences);
+      setPreferences(data);
       toast({
         title: "Success",
         description: "Preferences updated successfully",

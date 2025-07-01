@@ -1,26 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Trophy, MessageSquare, Users, Mail, Lock } from "lucide-react";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useToast } from "@/hooks/use-toast";
-import RegisterForm from "@/components/auth/RegisterForm";
-
-interface UserProfileData {
-  id: string;
-  user_id: string;
-  display_name: string;
-  bio: string;
-  favorite_driver_id: string;
-  favorite_team_id: string;
-  avatar_url: string;
-  created_at: string;
-}
+import { User, Trophy, MessageSquare, Users, Settings, Shield, Bell } from "lucide-react";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
+import UserStatsDashboard from "@/components/profile/UserStatsDashboard";
+import ActivityTimeline from "@/components/profile/ActivityTimeline";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
 interface UserProfileProps {
   userId?: string;
@@ -28,109 +22,73 @@ interface UserProfileProps {
 
 const UserProfile = ({ userId }: UserProfileProps) => {
   const { user } = useAuth();
+  const { preferences, loading, updatePreferences } = useUserPreferences();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    postsCount: 0,
-    commentsCount: 0,
-    followersCount: 0,
-    followingCount: 0
-  });
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [formData, setFormData] = useState({
     display_name: '',
     bio: '',
-    favorite_driver_id: '',
-    favorite_team_id: ''
+    profile_picture_url: '',
+    notifications_enabled: true,
+    email_notifications: false,
+    push_notifications: true,
+    timezone: 'UTC'
   });
 
   const isOwnProfile = !userId || userId === user?.id;
-  const targetUserId = userId || user?.id;
 
   useEffect(() => {
-    if (targetUserId) {
-      fetchProfile();
-      fetchStats();
-    }
-  }, [targetUserId]);
-
-  const fetchProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data) {
-        setProfile(data);
-        setFormData({
-          display_name: data.display_name || '',
-          bio: data.bio || '',
-          favorite_driver_id: data.favorite_driver_id || '',
-          favorite_team_id: data.favorite_team_id || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile",
-        variant: "destructive",
+    if (preferences) {
+      setFormData({
+        display_name: preferences.display_name || '',
+        bio: preferences.bio || '',
+        profile_picture_url: preferences.profile_picture_url || '',
+        notifications_enabled: preferences.notifications_enabled ?? true,
+        email_notifications: preferences.email_notifications ?? false,
+        push_notifications: preferences.push_notifications ?? true,
+        timezone: preferences.timezone || 'UTC'
       });
-    } finally {
-      setLoading(false);
+
+      // Show onboarding if not completed
+      if (!preferences.onboarding_completed && isOwnProfile) {
+        setShowOnboarding(true);
+      }
     }
-  };
+  }, [preferences, isOwnProfile]);
 
-  const fetchStats = async () => {
-    if (!targetUserId) return;
+  // If user is not logged in, show registration prompt
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="racing-text text-2xl">Join F1 Box Box</CardTitle>
+          <CardDescription>
+            Create an account to track your favorite races and interact with the community
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <Button asChild className="speed-button">
+            <a href="/register">Create Account</a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
-    try {
-      const [postsResult, commentsResult, followersResult, followingResult] = await Promise.all([
-        supabase.from('social_posts').select('id', { count: 'exact' }).eq('user_id', targetUserId),
-        supabase.from('race_comments').select('id', { count: 'exact' }).eq('user_id', targetUserId),
-        supabase.from('user_follows').select('id', { count: 'exact' }).eq('following_id', targetUserId),
-        supabase.from('user_follows').select('id', { count: 'exact' }).eq('follower_id', targetUserId)
-      ]);
-
-      setStats({
-        postsCount: postsResult.count || 0,
-        commentsCount: commentsResult.count || 0,
-        followersCount: followersResult.count || 0,
-        followingCount: followingResult.count || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
+  // Show onboarding flow if not completed
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
+  }
 
   const updateProfile = async () => {
-    if (!user) return;
-
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: user.id,
-          ...formData,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
+      await updatePreferences(formData);
+      setIsEditing(false);
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-      
-      setIsEditing(false);
-      fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -140,49 +98,6 @@ const UserProfile = ({ userId }: UserProfileProps) => {
       });
     }
   };
-
-  const followUser = async () => {
-    if (!user || !targetUserId) return;
-
-    try {
-      const { error } = await supabase
-        .from('user_follows')
-        .insert({
-          follower_id: user.id,
-          following_id: targetUserId
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Now following user",
-      });
-      
-      fetchStats();
-    } catch (error) {
-      console.error('Error following user:', error);
-    }
-  };
-
-  // If user is not logged in, show registration form
-  if (!user) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="racing-text text-2xl">Join F1 Box Box</CardTitle>
-            <CardDescription>
-              Create an account to track your favorite races and interact with the community
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RegisterForm onSuccess={() => window.location.reload()} />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -194,43 +109,46 @@ const UserProfile = ({ userId }: UserProfileProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Profile Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <Avatar className="w-20 h-20">
-                <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback>
-                  <User className="w-8 h-8" />
-                </AvatarFallback>
-              </Avatar>
+              <ProfilePictureUpload
+                currentImageUrl={formData.profile_picture_url}
+                onImageUpload={(url) => setFormData({ ...formData, profile_picture_url: url })}
+                size="lg"
+              />
               <div>
                 <CardTitle className="text-2xl">
-                  {profile?.display_name || user?.email}
+                  {formData.display_name || user?.email}
                 </CardTitle>
                 <CardDescription>
-                  Member since {new Date(profile?.created_at || '').toLocaleDateString()}
+                  Member since {new Date().toLocaleDateString()}
                 </CardDescription>
-                {profile?.bio && (
-                  <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
+                {formData.bio && (
+                  <p className="text-sm text-muted-foreground mt-2">{formData.bio}</p>
                 )}
               </div>
             </div>
             
-            <div className="flex space-x-2">
-              {isOwnProfile ? (
+            {isOwnProfile && (
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowOnboarding(true)}
+                  size="sm"
+                >
+                  Restart Setup
+                </Button>
                 <Button
                   variant={isEditing ? "default" : "outline"}
                   onClick={() => setIsEditing(!isEditing)}
                 >
                   {isEditing ? "Cancel" : "Edit Profile"}
                 </Button>
-              ) : (
-                <Button onClick={followUser}>
-                  Follow
-                </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </CardHeader>
 
@@ -247,89 +165,102 @@ const UserProfile = ({ userId }: UserProfileProps) => {
             
             <div>
               <Label htmlFor="bio">Bio</Label>
-              <Input
+              <Textarea
                 id="bio"
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 placeholder="Tell us about yourself..."
+                rows={3}
               />
             </div>
             
-            <Button onClick={updateProfile}>Save Changes</Button>
+            <Button onClick={updateProfile} className="speed-button">
+              Save Changes
+            </Button>
           </CardContent>
         )}
       </Card>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Trophy className="w-6 h-6 mx-auto mb-2 text-f1-orange" />
-            <div className="text-2xl font-bold">{stats.postsCount}</div>
-            <div className="text-sm text-muted-foreground">Posts</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 text-center">
-            <MessageSquare className="w-6 h-6 mx-auto mb-2 text-f1-red" />
-            <div className="text-2xl font-bold">{stats.commentsCount}</div>
-            <div className="text-sm text-muted-foreground">Comments</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <div className="text-2xl font-bold">{stats.followersCount}</div>
-            <div className="text-sm text-muted-foreground">Followers</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-6 h-6 mx-auto mb-2 text-green-500" />
-            <div className="text-2xl font-bold">{stats.followingCount}</div>
-            <div className="text-sm text-muted-foreground">Following</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* User Statistics */}
+      <UserStatsDashboard />
 
+      {/* Profile Tabs */}
       <Tabs defaultValue="activity" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="following">Following</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
         
         <TabsContent value="activity" className="space-y-4">
+          <ActivityTimeline />
+        </TabsContent>
+        
+        <TabsContent value="preferences" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Bell className="w-5 h-5" />
+                <span>Notification Settings</span>
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Activity feed coming soon...</p>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="notifications">Push Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Get real-time race updates</p>
+                </div>
+                <Switch
+                  id="notifications"
+                  checked={formData.push_notifications}
+                  onCheckedChange={(checked) => setFormData({ ...formData, push_notifications: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="email">Email Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Weekly summaries and updates</p>
+                </div>
+                <Switch
+                  id="email"
+                  checked={formData.email_notifications}
+                  onCheckedChange={(checked) => setFormData({ ...formData, email_notifications: checked })}
+                />
+              </div>
+
+              <Button onClick={updateProfile} className="speed-button">
+                Save Preferences
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="posts" className="space-y-4">
+        <TabsContent value="privacy" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Posts</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Shield className="w-5 h-5" />
+                <span>Privacy Settings</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Posts history coming soon...</p>
+              <p className="text-muted-foreground">Privacy settings coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="following" className="space-y-4">
+        <TabsContent value="account" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Following</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="w-5 h-5" />
+                <span>Account Settings</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Following list coming soon...</p>
+              <p className="text-muted-foreground">Account management coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>

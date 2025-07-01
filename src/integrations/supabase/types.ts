@@ -833,6 +833,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_data: Json | null
+          achievement_type: string
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_data?: Json | null
+          achievement_type: string
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_data?: Json | null
+          achievement_type?: string
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -856,44 +907,65 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          bio: string | null
           created_at: string | null
           dark_mode: boolean | null
+          display_name: string | null
           email_notifications: boolean | null
           favorite_driver_id: string | null
+          favorite_drivers: string[] | null
           favorite_team_id: string | null
           id: string
           language: string | null
           notifications_enabled: boolean | null
+          onboarding_completed: boolean | null
+          privacy_settings: Json | null
+          profile_picture_url: string | null
           push_notifications: boolean | null
           timezone: string | null
+          two_factor_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          bio?: string | null
           created_at?: string | null
           dark_mode?: boolean | null
+          display_name?: string | null
           email_notifications?: boolean | null
           favorite_driver_id?: string | null
+          favorite_drivers?: string[] | null
           favorite_team_id?: string | null
           id?: string
           language?: string | null
           notifications_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          privacy_settings?: Json | null
+          profile_picture_url?: string | null
           push_notifications?: boolean | null
           timezone?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          bio?: string | null
           created_at?: string | null
           dark_mode?: boolean | null
+          display_name?: string | null
           email_notifications?: boolean | null
           favorite_driver_id?: string | null
+          favorite_drivers?: string[] | null
           favorite_team_id?: string | null
           id?: string
           language?: string | null
           notifications_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          privacy_settings?: Json | null
+          profile_picture_url?: string | null
           push_notifications?: boolean | null
           timezone?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -967,10 +1039,35 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_statistics: {
+        Row: {
+          join_date: string | null
+          races_viewed: number | null
+          total_achievements: number | null
+          total_comments: number | null
+          total_predictions: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      award_achievement: {
+        Args: {
+          p_user_id: string
+          p_achievement_type: string
+          p_achievement_data?: Json
+        }
+        Returns: boolean
+      }
+      log_user_activity: {
+        Args: {
+          p_user_id: string
+          p_activity_type: string
+          p_activity_data?: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       driver_status: "active" | "retired" | "reserve"
