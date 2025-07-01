@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,7 +17,7 @@ export interface Race {
   is_sprint_weekend: boolean;
 }
 
-// Updated 2025 F1 Race Calendar Data with realistic race statuses
+// Updated 2025 F1 Race Calendar Data with realistic race statuses based on current date (July 1, 2025)
 const races2025: Omit<Race, 'id'>[] = [
   {
     name: "Bahrain Grand Prix",
@@ -25,7 +26,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-03-02",
     time: "15:00:00",
     round: 1,
-    status: "completed", // Race completed
+    status: "completed", // March 2 - completed
     circuit: "Bahrain International Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -38,7 +39,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-03-09",
     time: "20:00:00",
     round: 2,
-    status: "completed", // Race completed
+    status: "completed", // March 9 - completed
     circuit: "Jeddah Corniche Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -51,7 +52,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-03-16",
     time: "05:00:00",
     round: 3,
-    status: "completed", // Race completed
+    status: "completed", // March 16 - completed
     circuit: "Albert Park Grand Prix Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -64,7 +65,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-03-23",
     time: "07:00:00",
     round: 4,
-    status: "completed", // Race completed
+    status: "completed", // March 23 - completed
     circuit: "Shanghai International Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -77,7 +78,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-04-13",
     time: "05:00:00",
     round: 5,
-    status: "completed", // Race completed
+    status: "completed", // April 13 - completed
     circuit: "Suzuka Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -90,7 +91,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-05-04",
     time: "20:00:00",
     round: 6,
-    status: "completed", // Race completed
+    status: "completed", // May 4 - completed
     circuit: "Miami International Autodrome",
     season: 2025,
     weather_condition: "dry",
@@ -103,7 +104,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-05-18",
     time: "13:00:00",
     round: 7,
-    status: "completed", // Race completed
+    status: "completed", // May 18 - completed
     circuit: "Autodromo Enzo e Dino Ferrari",
     season: 2025,
     weather_condition: "dry",
@@ -116,7 +117,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-05-25",
     time: "13:00:00",
     round: 8,
-    status: "completed", // Race completed
+    status: "completed", // May 25 - completed
     circuit: "Circuit de Monaco",
     season: 2025,
     weather_condition: "dry",
@@ -129,7 +130,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-06-01",
     time: "13:00:00",
     round: 9,
-    status: "completed", // Race completed
+    status: "completed", // June 1 - completed
     circuit: "Madrid Street Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -142,14 +143,13 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-06-15",
     time: "18:00:00",
     round: 10,
-    status: "completed", // Race completed
+    status: "completed", // June 15 - completed
     circuit: "Circuit Gilles Villeneuve",
     season: 2025,
     weather_condition: "dry",
     is_sprint_weekend: false
   },
-  // Races 11-16 are completed (current date simulation)
-  // ... keep existing code for remaining races with updated statuses
+  // Only races before July 1, 2025 are completed
   {
     name: "Austrian Grand Prix",
     location: "Spielberg",
@@ -157,12 +157,13 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-06-29",
     time: "13:00:00",
     round: 11,
-    status: "completed",
+    status: "completed", // June 29 - completed (just before July 1)
     circuit: "Red Bull Ring",
     season: 2025,
     weather_condition: "dry",
     is_sprint_weekend: true
   },
+  // All races from July onwards are scheduled
   {
     name: "British Grand Prix",
     location: "Silverstone",
@@ -170,7 +171,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-07-06",
     time: "14:00:00",
     round: 12,
-    status: "completed",
+    status: "scheduled", // July 6 - upcoming
     circuit: "Silverstone Circuit",
     season: 2025,
     weather_condition: "dry",
@@ -183,7 +184,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-07-20",
     time: "13:00:00",
     round: 13,
-    status: "completed",
+    status: "scheduled", // July 20 - upcoming
     circuit: "Hungaroring",
     season: 2025,
     weather_condition: "dry",
@@ -196,7 +197,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-07-27",
     time: "13:00:00",
     round: 14,
-    status: "completed",
+    status: "scheduled", // July 27 - upcoming
     circuit: "Circuit de Spa-Francorchamps",
     season: 2025,
     weather_condition: "dry",
@@ -209,7 +210,7 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-08-31",
     time: "13:00:00",
     round: 15,
-    status: "completed",
+    status: "scheduled", // August 31 - upcoming
     circuit: "Circuit Zandvoort",
     season: 2025,
     weather_condition: "dry",
@@ -222,13 +223,13 @@ const races2025: Omit<Race, 'id'>[] = [
     date: "2025-09-07",
     time: "13:00:00",
     round: 16,
-    status: "completed",
+    status: "scheduled", // September 7 - upcoming
     circuit: "Autodromo Nazionale di Monza",
     season: 2025,
     weather_condition: "dry",
     is_sprint_weekend: false
   },
-  // Remaining races are upcoming
+  // Remaining races are all scheduled (upcoming)
   {
     name: "Azerbaijan Grand Prix",
     location: "Baku",
@@ -344,9 +345,9 @@ export const useRaces = (season?: number) => {
     queryFn: async () => {
       console.log(`Fetching races for season: ${targetSeason}`);
       
-      // For 2025, return our updated race calendar with proper statuses
+      // For 2025, return our updated race calendar with correct statuses based on July 1, 2025
       if (targetSeason === 2025) {
-        console.log('Returning 2025 race calendar data with updated statuses');
+        console.log('Returning 2025 race calendar data with updated statuses for July 1, 2025');
         return races2025.map((race, index) => ({
           ...race,
           id: `2025-race-${index + 1}`

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Trophy, MessageSquare, Users } from "lucide-react";
+import { User, Trophy, MessageSquare, Users, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import RegisterForm from "@/components/auth/RegisterForm";
 
 interface UserProfileData {
   id: string;
@@ -164,6 +164,25 @@ const UserProfile = ({ userId }: UserProfileProps) => {
       console.error('Error following user:', error);
     }
   };
+
+  // If user is not logged in, show registration form
+  if (!user) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="racing-text text-2xl">Join F1 Box Box</CardTitle>
+            <CardDescription>
+              Create an account to track your favorite races and interact with the community
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RegisterForm onSuccess={() => window.location.reload()} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
