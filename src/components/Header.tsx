@@ -41,29 +41,32 @@ const Header = ({ onSearchClick }: HeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center px-4">
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="mr-2 md:mr-4 lg:hidden"
-          onClick={toggleSidebar}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        {/* Left side - Mobile Menu + Logo */}
+        <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={toggleSidebar}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
 
-        {/* Logo */}
-        <NavLink to="/" className="flex items-center space-x-2 mr-6">
-          <div className="w-8 h-8 bg-racing-gradient rounded-full flex items-center justify-center">
-            <Flag className="w-4 h-4 text-white" />
-          </div>
-          <span className="hidden sm:inline-block racing-text text-xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
-            F1 Box Box
-          </span>
-        </NavLink>
+          {/* Logo */}
+          <NavLink to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-racing-gradient rounded-full flex items-center justify-center">
+              <Flag className="w-4 h-4 text-white" />
+            </div>
+            <span className="hidden sm:inline-block racing-text text-xl bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
+              F1 Box Box
+            </span>
+          </NavLink>
+        </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium flex-1">
+        {/* Center - Desktop Navigation */}
+        <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium">
           <NavLink 
             to="/drivers" 
             className={({ isActive }) => 
