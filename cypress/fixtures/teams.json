@@ -1,0 +1,19 @@
+
+[
+  {
+    "id": "1",
+    "name": "Red Bull Racing",
+    "full_name": "Oracle Red Bull Racing",
+    "points": 860,
+    "position": 1,
+    "logo_url": "/placeholder.svg"
+  },
+  {
+    "id": "2",
+    "name": "Mercedes",
+    "full_name": "Mercedes-AMG Petronas F1 Team",
+    "points": 409,
+    "position": 2,
+    "logo_url": "/placeholder.svg"
+  }
+]
