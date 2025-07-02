@@ -59,8 +59,10 @@ describe('Mobile Device Testing', () => {
       test('should support swipe gestures', async () => {
         await page.goto('http://localhost:8080');
         
-        // Simulate swipe gesture
-        await page.touchscreen.swipe(100, 300, 300, 300);
+        // Simulate swipe gesture using touchscreen API
+        await page.touchscreen.touchStart(100, 300);
+        await page.touchscreen.touchMove(300, 300);
+        await page.touchscreen.touchEnd();
         
         // Verify swipe action (implementation depends on your swipe handling)
         const swipeResult = await page.evaluate(() => {
