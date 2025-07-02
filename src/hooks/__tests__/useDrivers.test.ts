@@ -1,6 +1,6 @@
 
-import { renderHook } from '@testing-library/react';
-import { waitFor } from '@testing-library/dom';
+
+import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useDrivers } from '../useDrivers';
 import React from 'react';
@@ -42,3 +42,4 @@ describe('useDrivers', () => {
     expect(result.current.isLoading).toBe(true);
   });
 });
+
