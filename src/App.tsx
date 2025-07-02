@@ -1,10 +1,11 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider"
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "@/components/ui/toaster"
 import Layout from "@/components/Layout";
-import { QueryClient } from "@tanstack/react-query";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import LazyLoadWrapper from "@/components/LazyLoadWrapper";
 import { performanceMonitor, optimizeImages } from "@/utils/performanceMonitor";
 import { usePrefetchCriticalData } from "@/hooks/useOptimizedApi";
@@ -25,6 +26,16 @@ const LazyLogin = lazy(() => import("@/pages/Login"));
 const LazyRegister = lazy(() => import("@/pages/Register"));
 const LazyAdmin = lazy(() => import("@/pages/Admin"));
 const LazyNotFound = lazy(() => import("@/pages/NotFound"));
+
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 function App() {
   const { prefetchData } = usePrefetchCriticalData();
@@ -74,7 +85,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <QueryClient>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider>
             <Toaster />
@@ -158,7 +169,7 @@ function App() {
             </Layout>
           </ThemeProvider>
         </AuthProvider>
-      </QueryClient>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }

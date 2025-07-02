@@ -1,4 +1,11 @@
 
+// Extend Window interface for gtag
+declare global {
+  interface Window {
+    gtag?: (command: string, action: string, options?: any) => void;
+  }
+}
+
 interface PerformanceMetrics {
   loadTime: number;
   domContentLoaded: number;
@@ -72,8 +79,9 @@ class PerformanceMonitor {
     if ('performance' in window && 'getEntriesByType' in performance) {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       if (navigation) {
-        this.metrics.loadTime = navigation.loadEventEnd - navigation.navigationStart;
-        this.metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.navigationStart;
+        // Use loadEventEnd and fetchStart instead of navigationStart (which doesn't exist)
+        this.metrics.loadTime = navigation.loadEventEnd - navigation.fetchStart;
+        this.metrics.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
       }
     }
   }
@@ -92,7 +100,7 @@ class PerformanceMonitor {
     if (window.gtag) {
       Object.entries(metrics).forEach(([key, value]) => {
         if (value !== undefined) {
-          window.gtag('event', 'timing_complete', {
+          window.gtag!('event', 'timing_complete', {
             name: key,
             value: Math.round(value)
           });
