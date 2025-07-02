@@ -1,6 +1,5 @@
-
-
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import { BrowserRouter } from 'react-router-dom';
 import DriverCard from '../DriverCard';
 
@@ -40,4 +39,3 @@ describe('DriverCard', () => {
     expect(screen.getByText('#1 Max Verstappen')).toBeInTheDocument();
   });
 });
-
