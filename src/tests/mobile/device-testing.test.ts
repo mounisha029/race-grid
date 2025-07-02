@@ -1,5 +1,5 @@
 
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 
 describe('Mobile Device Testing', () => {
   let browser: puppeteer.Browser;

@@ -1,5 +1,5 @@
 
-import puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer';
 
 describe('Cross-Browser Compatibility', () => {
   const browsers = ['chrome', 'firefox'];

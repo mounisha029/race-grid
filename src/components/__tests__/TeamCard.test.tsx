@@ -6,12 +6,12 @@ import TeamCard from '../TeamCard';
 const mockTeam = {
   id: '1',
   name: 'Red Bull Racing',
-  full_name: 'Oracle Red Bull Racing',
-  points: 860,
   position: 1,
-  logo_url: '/team-1.jpg',
-  primary_color: '#0600EF',
-  secondary_color: '#DC143C'
+  points: 860,
+  color: '#0600EF',
+  drivers: ['Max Verstappen', 'Sergio Perez'],
+  wins: 12,
+  podiums: 20
 };
 
 const renderWithRouter = (component: React.ReactElement) => {
@@ -28,14 +28,12 @@ describe('TeamCard', () => {
     
     expect(screen.getByText('Red Bull Racing')).toBeInTheDocument();
     expect(screen.getByText('860')).toBeInTheDocument();
-    expect(screen.getByText('P1')).toBeInTheDocument();
   });
 
-  test('renders team logo with correct alt text', () => {
+  test('displays team drivers', () => {
     renderWithRouter(<TeamCard team={mockTeam} />);
     
-    const image = screen.getByAltText('Red Bull Racing');
-    expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', '/team-1.jpg');
+    expect(screen.getByText('Max Verstappen')).toBeInTheDocument();
+    expect(screen.getByText('Sergio Perez')).toBeInTheDocument();
   });
 });
