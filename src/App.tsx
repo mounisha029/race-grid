@@ -1,109 +1,165 @@
-
-import Index from "@/pages/Index";
-import Drivers from "@/pages/Drivers";
-import Teams from "@/pages/Teams";
-import Races from "@/pages/Races";
-import Admin from "@/pages/Admin";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import NotFound from "@/pages/NotFound";
-import Calendar from "@/pages/Calendar";
-import DriverProfile from "@/pages/DriverProfile";
-import TeamProfile from "@/pages/TeamProfile";
-import Analytics from "@/pages/Analytics";
-import Social from "@/pages/Social";
-import Profile from "@/pages/Profile";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/toaster"
 import Layout from "@/components/Layout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { QueryClient } from "@tanstack/react-query";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import LazyLoadWrapper from "@/components/LazyLoadWrapper";
+import { performanceMonitor, optimizeImages } from "@/utils/performanceMonitor";
+import { usePrefetchCriticalData } from "@/hooks/useOptimizedApi";
+import { lazy, useEffect } from "react";
 
-const queryClient = new QueryClient();
+// Lazy load route components
+const LazyIndex = lazy(() => import("@/pages/Index"));
+const LazyDrivers = lazy(() => import("@/pages/Drivers"));
+const LazyTeams = lazy(() => import("@/pages/Teams"));
+const LazyRaces = lazy(() => import("@/pages/Races"));
+const LazyCalendar = lazy(() => import("@/pages/Calendar"));
+const LazyAnalytics = lazy(() => import("@/pages/Analytics"));
+const LazyDriverProfile = lazy(() => import("@/pages/DriverProfile"));
+const LazyTeamProfile = lazy(() => import("@/pages/TeamProfile"));
+const LazyProfile = lazy(() => import("@/pages/Profile"));
+const LazySocial = lazy(() => import("@/pages/Social"));
+const LazyLogin = lazy(() => import("@/pages/Login"));
+const LazyRegister = lazy(() => import("@/pages/Register"));
+const LazyAdmin = lazy(() => import("@/pages/Admin"));
+const LazyNotFound = lazy(() => import("@/pages/NotFound"));
 
 function App() {
+  const { prefetchData } = usePrefetchCriticalData();
+
+  useEffect(() => {
+    // Initialize performance monitoring
+    const reportMetrics = () => {
+      setTimeout(() => {
+        const metrics = performanceMonitor.reportMetrics();
+        const resourceTiming = performanceMonitor.getResourceTiming();
+        
+        console.log('App Performance Metrics:', metrics);
+        console.log('Resource Timing:', resourceTiming);
+        
+        // Send metrics to service worker for potential analytics
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'PERFORMANCE_METRICS',
+            metrics,
+            resourceTiming
+          });
+        }
+      }, 3000);
+    };
+
+    // Preload critical images
+    optimizeImages.preloadImages([
+      '/placeholder.svg',
+      // Add other critical images here
+    ]);
+
+    // Prefetch critical data
+    prefetchData();
+
+    // Report metrics after initial load
+    if (document.readyState === 'complete') {
+      reportMetrics();
+    } else {
+      window.addEventListener('load', reportMetrics);
+    }
+
+    return () => {
+      performanceMonitor.disconnect();
+      window.removeEventListener('load', reportMetrics);
+    };
+  }, [prefetchData]);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="f1-box-theme">
+    <BrowserRouter>
+      <QueryClient>
         <AuthProvider>
-          <TooltipProvider>
-            <BrowserRouter>
+          <ThemeProvider>
+            <Toaster />
+            <Layout>
               <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                
-                {/* Protected routes with layout */}
                 <Route path="/" element={
-                  <Layout>
-                    <Index />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyIndex />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/drivers" element={
-                  <Layout>
-                    <Drivers />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyDrivers />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/drivers/:id" element={
-                  <Layout>
-                    <DriverProfile />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyDriverProfile />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/teams" element={
-                  <Layout>
-                    <Teams />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyTeams />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/teams/:id" element={
-                  <Layout>
-                    <TeamProfile />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyTeamProfile />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/races" element={
-                  <Layout>
-                    <Races />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyRaces />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/calendar" element={
-                  <Layout>
-                    <Calendar />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyCalendar />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/analytics" element={
-                  <Layout>
-                    <Analytics />
-                  </Layout>
-                } />
-                <Route path="/social" element={
-                  <Layout>
-                    <Social />
-                  </Layout>
+                  <LazyLoadWrapper>
+                    <LazyAnalytics />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/profile" element={
                   <ProtectedRoute>
-                    <Layout>
-                      <Profile />
-                    </Layout>
+                    <LazyLoadWrapper>
+                      <LazyProfile />
+                    </LazyLoadWrapper>
                   </ProtectedRoute>
+                } />
+                <Route path="/social" element={
+                  <LazyLoadWrapper>
+                    <LazySocial />
+                  </LazyLoadWrapper>
+                } />
+                <Route path="/login" element={
+                  <LazyLoadWrapper>
+                    <LazyLogin />
+                  </LazyLoadWrapper>
+                } />
+                <Route path="/register" element={
+                  <LazyLoadWrapper>
+                    <LazyRegister />
+                  </LazyLoadWrapper>
                 } />
                 <Route path="/admin" element={
                   <ProtectedRoute>
-                    <Layout>
-                      <Admin />
-                    </Layout>
+                    <LazyLoadWrapper>
+                      <LazyAdmin />
+                    </LazyLoadWrapper>
                   </ProtectedRoute>
                 } />
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={
+                  <LazyLoadWrapper>
+                    <LazyNotFound />
+                  </LazyLoadWrapper>
+                } />
               </Routes>
-            </BrowserRouter>
-            <Toaster />
-          </TooltipProvider>
+            </Layout>
+          </ThemeProvider>
         </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+      </QueryClient>
+    </BrowserRouter>
   );
 }
 

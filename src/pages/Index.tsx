@@ -10,15 +10,15 @@ import RaceCard from "@/components/RaceCard";
 import ChampionshipHighlight from "@/components/ChampionshipHighlight";
 import SeasonSummary from "@/components/SeasonSummary";
 import SwipeableTabContent from "@/components/mobile/SwipeableTabContent";
-import { useChampionshipStandings, useTeams } from "@/hooks/useApi";
+import { useOptimizedChampionshipStandings, useOptimizedTeams } from "@/hooks/useOptimizedApi";
 import { useRaces } from "@/hooks/useRaces";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChampionshipResponse, DriverStanding, ConstructorStanding, TeamsResponse } from "@/types/api";
 
 const Index = () => {
-  const { data: driverChampionshipData, isLoading: driversLoading } = useChampionshipStandings("2025", "drivers");
-  const { data: constructorChampionshipData, isLoading: constructorsLoading } = useChampionshipStandings("2025", "constructors");
-  const { data: teamsData } = useTeams();
+  const { data: driverChampionshipData, isLoading: driversLoading } = useOptimizedChampionshipStandings("2025", "drivers");
+  const { data: constructorChampionshipData, isLoading: constructorsLoading } = useOptimizedChampionshipStandings("2025", "constructors");
+  const { data: teamsData } = useOptimizedTeams();
   const { data: races = [] } = useRaces(2025);
   const isMobile = useIsMobile();
 
