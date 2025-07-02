@@ -35,6 +35,12 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Safe area insets for mobile devices */
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   }
 
   .dark {
@@ -76,6 +82,8 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
   }
   
   /* Racing Typography */
@@ -94,6 +102,19 @@
       rgba(255, 255, 255, 0.1) 12px
     );
   }
+
+  /* Mobile-specific styles */
+  @media (max-width: 768px) {
+    html {
+      /* Prevent zoom on focus */
+      font-size: 16px;
+    }
+
+    input, select, textarea {
+      /* Prevent zoom on focus on iOS */
+      font-size: 16px;
+    }
+  }
 }
 
 @layer components {
@@ -108,6 +129,53 @@
   
   .position-badge {
     @apply inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-f1-yellow to-f1-orange text-f1-black font-bold rounded-full text-sm shadow-lg;
+  }
+
+  /* Mobile touch-friendly components */
+  .touch-friendly {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Safe area utilities */
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* Hide scrollbars but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Mobile-optimized animations */
+  @media (prefers-reduced-motion: reduce) {
+    .racing-card {
+      @apply hover:scale-100;
+    }
+
+    .speed-button {
+      @apply hover:scale-100;
+    }
   }
 }
 
@@ -140,4 +208,18 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #FF6600, #FFD700);
+}
+
+/* Mobile viewport adjustments */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
 }
