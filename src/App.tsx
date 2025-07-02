@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import LazyLoadWrapper from "@/components/LazyLoadWrapper";
 import { performanceMonitor, optimizeImages } from "@/utils/performanceMonitor";
-import { usePrefetchCriticalData } from "@/hooks/useOptimizedApi";
+import { usePrefetchCriticalData } from "@/hooks/usePrefetchCriticalData";
 import { lazy, useEffect } from "react";
 
 // Lazy load route components
