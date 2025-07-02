@@ -1,3 +1,5 @@
+
+import React, { lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { AuthProvider } from "@/components/auth/AuthProvider";
@@ -8,7 +10,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import LazyLoadWrapper from "@/components/LazyLoadWrapper";
 import { performanceMonitor, optimizeImages } from "@/utils/performanceMonitor";
 import { usePrefetchCriticalData } from "@/hooks/usePrefetchCriticalData";
-import { lazy, useEffect } from "react";
 import EnvironmentStatus from './components/EnvironmentStatus';
 import { config } from './config/environment';
 import { logger } from './utils/logger';
@@ -86,7 +87,7 @@ function App() {
   }, [prefetchData]);
 
   // Log app initialization
-  React.useEffect(() => {
+  useEffect(() => {
     logger.info('App initialized', {
       environment: config.NODE_ENV,
       version: config.APP_VERSION,
