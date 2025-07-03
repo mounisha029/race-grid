@@ -40,10 +40,12 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
+function AppContent() {
   const { prefetchData } = usePrefetchCriticalData();
 
   useEffect(() => {
+    console.log('App initialized - starting performance monitoring');
+    
     // Initialize performance monitoring
     const reportMetrics = () => {
       setTimeout(() => {
@@ -96,91 +98,99 @@ function App() {
   }, []);
 
   return (
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={
+            <LazyLoadWrapper>
+              <LazyIndex />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/drivers" element={
+            <LazyLoadWrapper>
+              <LazyDrivers />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/drivers/:id" element={
+            <LazyLoadWrapper>
+              <LazyDriverProfile />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/teams" element={
+            <LazyLoadWrapper>
+              <LazyTeams />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/teams/:id" element={
+            <LazyLoadWrapper>
+              <LazyTeamProfile />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/races" element={
+            <LazyLoadWrapper>
+              <LazyRaces />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/calendar" element={
+            <LazyLoadWrapper>
+              <LazyCalendar />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/analytics" element={
+            <LazyLoadWrapper>
+              <LazyAnalytics />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <LazyLoadWrapper>
+                <LazyProfile />
+              </LazyLoadWrapper>
+            </ProtectedRoute>
+          } />
+          <Route path="/social" element={
+            <LazyLoadWrapper>
+              <LazySocial />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/login" element={
+            <LazyLoadWrapper>
+              <LazyLogin />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/register" element={
+            <LazyLoadWrapper>
+              <LazyRegister />
+            </LazyLoadWrapper>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <LazyLoadWrapper>
+                <LazyAdmin />
+              </LazyLoadWrapper>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={
+            <LazyLoadWrapper>
+              <LazyNotFound />
+            </LazyLoadWrapper>
+          } />
+        </Routes>
+      </Layout>
+      <Toaster />
+      <EnvironmentStatus />
+    </Router>
+  );
+}
+
+function App() {
+  console.log('App component rendering');
+  
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="f1-insights-theme">
         <AuthProvider>
-          <Router>
-            <Layout>
-              <Routes>
-                <Route path="/" element={
-                  <LazyLoadWrapper>
-                    <LazyIndex />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/drivers" element={
-                  <LazyLoadWrapper>
-                    <LazyDrivers />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/drivers/:id" element={
-                  <LazyLoadWrapper>
-                    <LazyDriverProfile />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/teams" element={
-                  <LazyLoadWrapper>
-                    <LazyTeams />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/teams/:id" element={
-                  <LazyLoadWrapper>
-                    <LazyTeamProfile />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/races" element={
-                  <LazyLoadWrapper>
-                    <LazyRaces />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/calendar" element={
-                  <LazyLoadWrapper>
-                    <LazyCalendar />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/analytics" element={
-                  <LazyLoadWrapper>
-                    <LazyAnalytics />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <LazyLoadWrapper>
-                      <LazyProfile />
-                    </LazyLoadWrapper>
-                  </ProtectedRoute>
-                } />
-                <Route path="/social" element={
-                  <LazyLoadWrapper>
-                    <LazySocial />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/login" element={
-                  <LazyLoadWrapper>
-                    <LazyLogin />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/register" element={
-                  <LazyLoadWrapper>
-                    <LazyRegister />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/admin" element={
-                  <ProtectedRoute>
-                    <LazyLoadWrapper>
-                      <LazyAdmin />
-                    </LazyLoadWrapper>
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={
-                  <LazyLoadWrapper>
-                    <LazyNotFound />
-                  </LazyLoadWrapper>
-                } />
-              </Routes>
-            </Layout>
-            <Toaster />
-            <EnvironmentStatus />
-          </Router>
+          <AppContent />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
