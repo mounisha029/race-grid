@@ -97,6 +97,8 @@ function AppContent() {
     });
   }, []);
 
+  console.log('AppContent rendering');
+
   return (
     <Router>
       <Layout>

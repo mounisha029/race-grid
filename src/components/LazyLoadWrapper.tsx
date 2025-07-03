@@ -8,6 +8,8 @@ interface LazyLoadWrapperProps {
 }
 
 const LazyLoadWrapper = ({ children, fallback }: LazyLoadWrapperProps) => {
+  console.log('LazyLoadWrapper rendering with children:', children);
+  
   const defaultFallback = (
     <div className="container mx-auto px-4 py-8 space-y-4">
       <Skeleton className="h-8 w-1/3" />
