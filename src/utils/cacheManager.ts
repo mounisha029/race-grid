@@ -1,83 +1,127 @@
 
-import { config } from '@/config/environment';
-import { logger } from './logger';
-
-// Update cache keys to be environment-aware
-export const CACHE_KEYS = {
-  DRIVERS: `drivers_${config.NODE_ENV}`,
-  TEAMS: `teams_${config.NODE_ENV}`,
-  RACES: (season: string) => `races_${season}_${config.NODE_ENV}`,
-  CHAMPIONSHIP: (season: string, type: string) => `championship_${season}_${type}_${config.NODE_ENV}`,
-  LIVE_DATA: (raceId: string) => `live_${raceId}_${config.NODE_ENV}`,
-} as const;
-
-// Use environment-specific TTL values
-export const CACHE_TTL = config.CACHE_TTL;
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+  expiry: number;
+}
 
 class CacheManager {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-  
-  set(key: string, data: any, ttl: number = CACHE_TTL.MEDIUM): void {
-    this.cache.set(key, {
+  private cache = new Map<string, CacheItem<any>>();
+  private memoryCache = new Map<string, any>();
+
+  // Set cache with TTL (time to live) in milliseconds
+  set<T>(key: string, data: T, ttl: number = 5 * 60 * 1000): void {
+    const item: CacheItem<T> = {
       data,
       timestamp: Date.now(),
-      ttl
-    });
+      expiry: Date.now() + ttl
+    };
+
+    // Store in memory cache
+    this.cache.set(key, item);
     
-    logger.debug(`Cache set: ${key} (TTL: ${ttl}ms)`);
+    // Store in localStorage for persistence
+    try {
+      localStorage.setItem(`cache_${key}`, JSON.stringify(item));
+    } catch (error) {
+      console.warn('Failed to store in localStorage:', error);
+    }
   }
 
-  get(key: string): any | null {
-    const item = this.cache.get(key);
+  get<T>(key: string): T | null {
+    // Check memory cache first
+    let item = this.cache.get(key);
     
+    // If not in memory, check localStorage
     if (!item) {
-      logger.debug(`Cache miss: ${key}`);
-      return null;
+      try {
+        const stored = localStorage.getItem(`cache_${key}`);
+        if (stored) {
+          item = JSON.parse(stored);
+          // Restore to memory cache
+          if (item) this.cache.set(key, item);
+        }
+      } catch (error) {
+        console.warn('Failed to retrieve from localStorage:', error);
+      }
     }
 
-    const now = Date.now();
-    const isExpired = now - item.timestamp > item.ttl;
-
-    if (isExpired) {
-      this.cache.delete(key);
-      logger.debug(`Cache expired: ${key}`);
-      return null;
+    // Check if item exists and is not expired
+    if (item && Date.now() < item.expiry) {
+      return item.data;
     }
 
-    logger.debug(`Cache hit: ${key}`);
-    return item.data;
+    // Remove expired item
+    if (item) {
+      this.delete(key);
+    }
+
+    return null;
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key);
+    try {
+      localStorage.removeItem(`cache_${key}`);
+    } catch (error) {
+      console.warn('Failed to remove from localStorage:', error);
+    }
   }
 
   clear(): void {
     this.cache.clear();
-    logger.info('Cache cleared');
+    // Clear all cache items from localStorage
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('cache_')) {
+        localStorage.removeItem(key);
+      }
+    });
   }
 
-  // Environment-specific methods
-  setShortTerm(key: string, data: any): void {
-    this.set(key, data, CACHE_TTL.SHORT);
+  // Preload critical data
+  async preload(key: string, dataFetcher: () => Promise<any>, ttl?: number): Promise<void> {
+    if (!this.get(key)) {
+      try {
+        const data = await dataFetcher();
+        this.set(key, data, ttl);
+      } catch (error) {
+        console.error('Failed to preload data:', error);
+      }
+    }
   }
 
-  setMediumTerm(key: string, data: any): void {
-    this.set(key, data, CACHE_TTL.MEDIUM);
-  }
+  // Get cache statistics
+  getStats() {
+    const total = this.cache.size;
+    const expired = Array.from(this.cache.values()).filter(
+      item => Date.now() >= item.expiry
+    ).length;
 
-  setLongTerm(key: string, data: any): void {
-    this.set(key, data, CACHE_TTL.LONG);
-  }
-
-  setVeryLongTerm(key: string, data: any): void {
-    this.set(key, data, CACHE_TTL.VERY_LONG);
-  }
-
-  // Get cache statistics for monitoring
-  getStats(): { size: number; keys: string[]; environment: string } {
     return {
-      size: this.cache.size,
-      keys: Array.from(this.cache.keys()),
-      environment: config.NODE_ENV
+      total,
+      active: total - expired,
+      expired,
+      hitRate: this.memoryCache.size / (this.memoryCache.size + 1) // Simplified calculation
     };
   }
 }
 
 export const cacheManager = new CacheManager();
+
+// Cache keys constants
+export const CACHE_KEYS = {
+  DRIVERS: 'drivers',
+  TEAMS: 'teams',
+  RACES: (season: string) => `races_${season}`,
+  CHAMPIONSHIP: (season: string, type: string) => `championship_${season}_${type}`,
+  LIVE_RACE: (raceId: string) => `live_race_${raceId}`,
+  USER_PREFERENCES: (userId: string) => `user_prefs_${userId}`
+} as const;
+
+// TTL constants (in milliseconds)
+export const CACHE_TTL = {
+  SHORT: 2 * 60 * 1000,      // 2 minutes
+  MEDIUM: 15 * 60 * 1000,    // 15 minutes
+  LONG: 60 * 60 * 1000,      // 1 hour
+  VERY_LONG: 24 * 60 * 60 * 1000  // 24 hours
+} as const;
