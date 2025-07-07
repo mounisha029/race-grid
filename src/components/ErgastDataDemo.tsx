@@ -7,37 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, Trophy, Users, Flag, Clock, MapPin } from "lucide-react";
-import {
-  useCurrentSeasonRaces,
-  useSeasonRaces,
-  useCurrentDriverStandings,
-  useCurrentConstructorStandings,
-  useRaceResults,
-  useQualifyingResults
-} from "@/hooks/useErgastData";
+import { useRaces } from "@/hooks/useRaces";
+import { useDrivers } from "@/hooks/useDrivers";
+import { useTeams } from "@/hooks/useTeams";
+import { useRaceResults } from "@/hooks/useRaceResults";
 
 const ErgastDataDemo = () => {
-  const [selectedSeason, setSelectedSeason] = useState<string>("2024");
-  const [selectedRound, setSelectedRound] = useState<string>("1");
+  const [selectedSeason, setSelectedSeason] = useState<string>("2025");
+  const [selectedRaceId, setSelectedRaceId] = useState<string>("");
 
-  const { data: currentRaces, isLoading: racesLoading } = useCurrentSeasonRaces();
-  const { data: seasonRaces, isLoading: seasonLoading } = useSeasonRaces(parseInt(selectedSeason));
-  const { data: driverStandings, isLoading: driversLoading } = useCurrentDriverStandings();
-  const { data: constructorStandings, isLoading: constructorsLoading } = useCurrentConstructorStandings();
-  const { data: raceResults, isLoading: resultsLoading } = useRaceResults(parseInt(selectedSeason), parseInt(selectedRound));
-  const { data: qualifyingResults, isLoading: qualifyingLoading } = useQualifyingResults(parseInt(selectedSeason), parseInt(selectedRound));
+  const { data: races, isLoading: racesLoading } = useRaces(parseInt(selectedSeason));
+  const { data: drivers, isLoading: driversLoading } = useDrivers();
+  const { data: teams, isLoading: teamsLoading } = useTeams();
+  const { data: raceResults, isLoading: resultsLoading } = useRaceResults(selectedRaceId);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+
+  // Get the selected race for results display
+  const selectedRace = races?.find(race => race.id === selectedRaceId);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-f1-red to-f1-orange bg-clip-text text-transparent">
-          Ergast API Data Demo
+          F1 2025 Data Demo
         </h1>
         <p className="text-lg text-muted-foreground">
-          Live Formula 1 data from the official Ergast Motor Racing API
+          Live Formula 1 2025 season data from your Supabase database
         </p>
       </div>
 
@@ -55,24 +52,26 @@ const ErgastDataDemo = () => {
           </SelectContent>
         </Select>
         
-        <Input
-          type="number"
-          placeholder="Round"
-          value={selectedRound}
-          onChange={(e) => setSelectedRound(e.target.value)}
-          className="w-24"
-          min="1"
-          max="24"
-        />
+        <Select value={selectedRaceId} onValueChange={setSelectedRaceId}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Select Race" />
+          </SelectTrigger>
+          <SelectContent>
+            {races?.map((race) => (
+              <SelectItem key={race.id} value={race.id}>
+                Round {race.round}: {race.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="races" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="races">Races</TabsTrigger>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
-          <TabsTrigger value="constructors">Teams</TabsTrigger>
+          <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
-          <TabsTrigger value="qualifying">Qualifying</TabsTrigger>
         </TabsList>
 
         <TabsContent value="races" className="space-y-4">
@@ -83,36 +82,42 @@ const ErgastDataDemo = () => {
                 {selectedSeason} Season Calendar
               </CardTitle>
               <CardDescription>
-                Race schedule for the selected season
+                Race schedule for the {selectedSeason} season
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {seasonLoading ? (
+              {racesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {seasonRaces?.map((race, index) => (
-                    <Card key={`${race.season}-${race.round}`} className="border-l-4 border-l-f1-red">
+                  {races?.map((race) => (
+                    <Card key={race.id} className="border-l-4 border-l-f1-red">
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg">{race.raceName}</CardTitle>
+                          <CardTitle className="text-lg">{race.name}</CardTitle>
                           <Badge variant="outline">Round {race.round}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="w-4 h-4" />
-                          <span>{race.Circuit.Location.locality}, {race.Circuit.Location.country}</span>
+                          <span>{race.location}, {race.country}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="w-4 h-4" />
                           <span>{race.date} {race.time && `at ${race.time}`}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {race.Circuit.circuitName}
+                          {race.circuit}
                         </div>
+                        <Badge variant={race.status === 'completed' ? 'default' : 'secondary'}>
+                          {race.status}
+                        </Badge>
+                        {race.is_sprint_weekend && (
+                          <Badge variant="outline">Sprint Weekend</Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -127,10 +132,10 @@ const ErgastDataDemo = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
-                Current Driver Standings
+                {selectedSeason} Season Drivers
               </CardTitle>
               <CardDescription>
-                Live championship standings
+                All drivers competing in the {selectedSeason} season
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -140,24 +145,26 @@ const ErgastDataDemo = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {driverStandings?.[0]?.DriverStandings?.map((standing, index) => (
-                    <div key={standing.Driver.driverId} className="flex items-center justify-between p-4 rounded-lg border">
+                  {drivers?.map((driver) => (
+                    <div key={driver.id} className="flex items-center justify-between p-4 rounded-lg border">
                       <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-full bg-f1-red text-white flex items-center justify-center font-bold">
-                          {standing.position}
+                          {driver.driver_number}
                         </div>
                         <div>
                           <div className="font-semibold">
-                            {standing.Driver.givenName} {standing.Driver.familyName}
+                            {driver.first_name} {driver.last_name}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {standing.Driver.nationality} • #{standing.Driver.permanentNumber}
+                            {driver.nationality}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-lg">{standing.points} pts</div>
-                        <div className="text-sm text-muted-foreground">{standing.wins} wins</div>
+                        <div className="font-bold text-lg">{driver.points || 0} pts</div>
+                        <div className="text-sm text-muted-foreground">
+                          Position: {driver.position || 'N/A'}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -167,38 +174,45 @@ const ErgastDataDemo = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="constructors" className="space-y-4">
+        <TabsContent value="teams" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Constructor Standings
+                {selectedSeason} Season Teams
               </CardTitle>
               <CardDescription>
-                Team championship standings
+                All constructor teams competing in {selectedSeason}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {constructorsLoading ? (
+              {teamsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {constructorStandings?.[0]?.ConstructorStandings?.map((standing, index) => (
-                    <div key={standing.Constructor.constructorId} className="flex items-center justify-between p-4 rounded-lg border">
+                  {teams?.map((team) => (
+                    <div key={team.id} className="flex items-center justify-between p-4 rounded-lg border">
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded-full bg-f1-orange text-white flex items-center justify-center font-bold">
-                          {standing.position}
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white"
+                          style={{ backgroundColor: team.primary_color || '#ef4444' }}
+                        >
+                          {team.position || '?'}
                         </div>
                         <div>
-                          <div className="font-semibold">{standing.Constructor.name}</div>
-                          <div className="text-sm text-muted-foreground">{standing.Constructor.nationality}</div>
+                          <div className="font-semibold">{team.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {team.full_name}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-lg">{standing.points} pts</div>
-                        <div className="text-sm text-muted-foreground">{standing.wins} wins</div>
+                        <div className="font-bold text-lg">{team.points || 0} pts</div>
+                        <div className="text-sm text-muted-foreground">
+                          {team.championship_titles || 0} titles
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -213,40 +227,52 @@ const ErgastDataDemo = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Flag className="w-5 h-5" />
-                Race Results - Season {selectedSeason}, Round {selectedRound}
+                Race Results
+                {selectedRace && (
+                  <span className="text-base font-normal">
+                    - {selectedRace.name}
+                  </span>
+                )}
               </CardTitle>
               <CardDescription>
-                Final race results and classification
+                {selectedRace 
+                  ? `Results for ${selectedRace.name} (Round ${selectedRace.round})`
+                  : 'Select a race to view results'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {resultsLoading ? (
+              {!selectedRaceId ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Please select a race from the dropdown above to view results
+                </div>
+              ) : resultsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
               ) : raceResults && raceResults.length > 0 ? (
                 <div className="space-y-2">
-                  {raceResults.map((result, index) => (
-                    <div key={result.Driver.driverId} className="flex items-center justify-between p-3 rounded border">
+                  {raceResults.map((result) => (
+                    <div key={result.id} className="flex items-center justify-between p-3 rounded border">
                       <div className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded flex items-center justify-center text-sm font-bold ${
-                          parseInt(result.position) <= 3 ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-700'
+                          result.position <= 3 ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-700'
                         }`}>
                           {result.position}
                         </div>
                         <div>
                           <div className="font-medium">
-                            {result.Driver.givenName} {result.Driver.familyName}
+                            {result.drivers.first_name} {result.drivers.last_name}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {result.Constructor.name}
+                            {result.teams.name} • #{result.drivers.driver_number}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold">{result.points} pts</div>
+                        <div className="font-bold">{result.points_awarded} pts</div>
                         <div className="text-sm text-muted-foreground">
-                          {result.Time?.time || result.status}
+                          {result.final_time || result.status}
                         </div>
                       </div>
                     </div>
@@ -254,59 +280,7 @@ const ErgastDataDemo = () => {
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No race results found for Season {selectedSeason}, Round {selectedRound}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="qualifying" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Qualifying Results - Season {selectedSeason}, Round {selectedRound}
-              </CardTitle>
-              <CardDescription>
-                Grid positions and qualifying times
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {qualifyingLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                </div>
-              ) : qualifyingResults && qualifyingResults.length > 0 ? (
-                <div className="space-y-2">
-                  {qualifyingResults.map((result, index) => (
-                    <div key={result.Driver.driverId} className="flex items-center justify-between p-3 rounded border">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded flex items-center justify-center text-sm font-bold ${
-                          parseInt(result.position) === 1 ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-700'
-                        }`}>
-                          {result.position}
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {result.Driver.givenName} {result.Driver.familyName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {result.Constructor.name}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono">
-                          {result.Time?.time || 'No time'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No qualifying results found for Season {selectedSeason}, Round {selectedRound}
+                  No race results found for the selected race
                 </div>
               )}
             </CardContent>
