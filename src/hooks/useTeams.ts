@@ -9,6 +9,9 @@ export interface Team {
   primary_color: string;
   secondary_color: string;
   logo_url?: string;
+  points?: number;
+  position?: number;
+  championship_titles?: number;
 }
 
 export const useTeams = () => {

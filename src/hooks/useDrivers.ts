@@ -10,6 +10,11 @@ export interface Driver {
   team_id: string;
   nationality: string;
   profile_image_url?: string;
+  points?: number;
+  position?: number;
+  wins?: number;
+  podiums?: number;
+  championships?: number;
 }
 
 export const useDrivers = () => {
