@@ -1,4 +1,3 @@
-
 interface ErgastResponse<T> {
   MRData: T;
 }
@@ -17,6 +16,14 @@ interface ErgastConstructorTable {
 
 interface ErgastStandingsTable {
   StandingsLists: ErgastStandings[];
+}
+
+interface ErgastLapTable {
+  Laps: any[];
+}
+
+interface ErgastPitStopTable {
+  PitStops: any[];
 }
 
 interface ErgastRace {
@@ -279,7 +286,7 @@ class ErgastApiService {
     const url = `${this.BASE_URL}/${season}/${round}/laps${lapQuery}.json`;
     
     try {
-      const response = await this.fetchWithCache(url);
+      const response: ErgastResponse<ErgastLapTable> = await this.fetchWithCache(url);
       return response.MRData?.Laps || [];
     } catch (error) {
       console.error(`Failed to fetch lap times for ${season}/${round}:`, error);
@@ -292,7 +299,7 @@ class ErgastApiService {
     const url = `${this.BASE_URL}/${season}/${round}/pitstops.json`;
     
     try {
-      const response = await this.fetchWithCache(url);
+      const response: ErgastResponse<ErgastPitStopTable> = await this.fetchWithCache(url);
       return response.MRData?.PitStops || [];
     } catch (error) {
       console.error(`Failed to fetch pit stops for ${season}/${round}:`, error);
