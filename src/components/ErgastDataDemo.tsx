@@ -7,25 +7,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, Trophy, Users, Flag, Clock, MapPin } from "lucide-react";
-import { useRaces } from "@/hooks/useRaces";
-import { useDrivers } from "@/hooks/useDrivers";
-import { useTeams } from "@/hooks/useTeams";
-import { useRaceResults } from "@/hooks/useRaceResults";
+import { useSeasonRaces, useSeasonDrivers, useSeasonConstructors, useRaceResults } from "@/hooks/useErgastData";
 
 const ErgastDataDemo = () => {
   const [selectedSeason, setSelectedSeason] = useState<string>("2025");
   const [selectedRaceId, setSelectedRaceId] = useState<string>("");
 
-  const { data: races, isLoading: racesLoading } = useRaces(parseInt(selectedSeason));
-  const { data: drivers, isLoading: driversLoading } = useDrivers();
-  const { data: teams, isLoading: teamsLoading } = useTeams();
-  const { data: raceResults, isLoading: resultsLoading } = useRaceResults(selectedRaceId);
+  const { data: races, isLoading: racesLoading } = useSeasonRaces(parseInt(selectedSeason));
+  const { data: drivers, isLoading: driversLoading } = useSeasonDrivers(parseInt(selectedSeason));
+  const { data: teams, isLoading: teamsLoading } = useSeasonConstructors(parseInt(selectedSeason));
+  const { data: raceResults, isLoading: resultsLoading } = useRaceResults(parseInt(selectedSeason), selectedRaceId ? parseInt(selectedRaceId.split('-')[1]) : 0);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
   // Get the selected race for results display
-  const selectedRace = races?.find(race => race.id === selectedRaceId);
+  const selectedRace = races?.find(race => `${selectedSeason}-${race.round}` === selectedRaceId);
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
@@ -58,7 +55,7 @@ const ErgastDataDemo = () => {
           </SelectTrigger>
           <SelectContent>
             {races?.map((race) => (
-              <SelectItem key={race.id} value={race.id}>
+              <SelectItem key={race.id} value={`${selectedSeason}-${race.round}`}>
                 Round {race.round}: {race.name}
               </SelectItem>
             ))}
@@ -115,7 +112,7 @@ const ErgastDataDemo = () => {
                         <Badge variant={race.status === 'completed' ? 'default' : 'secondary'}>
                           {race.status}
                         </Badge>
-                        {race.is_sprint_weekend && (
+                        {race.isSprintWeekend && (
                           <Badge variant="outline">Sprint Weekend</Badge>
                         )}
                       </CardContent>
@@ -149,11 +146,11 @@ const ErgastDataDemo = () => {
                     <div key={driver.id} className="flex items-center justify-between p-4 rounded-lg border">
                       <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-full bg-f1-red text-white flex items-center justify-center font-bold">
-                          {driver.driver_number}
+                          {driver.driverNumber}
                         </div>
                         <div>
                           <div className="font-semibold">
-                            {driver.first_name} {driver.last_name}
+                            {driver.firstName} {driver.lastName}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {driver.nationality}
@@ -197,21 +194,21 @@ const ErgastDataDemo = () => {
                       <div className="flex items-center gap-4">
                         <div 
                           className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white"
-                          style={{ backgroundColor: team.primary_color || '#ef4444' }}
+                          style={{ backgroundColor: team.primaryColor || '#ef4444' }}
                         >
                           {team.position || '?'}
                         </div>
                         <div>
                           <div className="font-semibold">{team.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {team.full_name}
+                            {team.fullName}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-lg">{team.points || 0} pts</div>
                         <div className="text-sm text-muted-foreground">
-                          {team.championship_titles || 0} titles
+                          {team.championships || 0} titles
                         </div>
                       </div>
                     </div>
@@ -262,17 +259,17 @@ const ErgastDataDemo = () => {
                         </div>
                         <div>
                           <div className="font-medium">
-                            {result.drivers.first_name} {result.drivers.last_name}
+                            {result.driver.firstName} {result.driver.lastName}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {result.teams.name} • #{result.drivers.driver_number}
+                            {result.team.name} • #{result.driver.driverNumber}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold">{result.points_awarded} pts</div>
+                        <div className="font-bold">{result.points} pts</div>
                         <div className="text-sm text-muted-foreground">
-                          {result.final_time || result.status}
+                          {result.time || result.status}
                         </div>
                       </div>
                     </div>
