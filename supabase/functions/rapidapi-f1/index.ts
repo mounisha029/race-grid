@@ -17,10 +17,13 @@ serve(async (req) => {
   }
 
   try {
+    console.log('rapidapi-f1 function called');
     const { endpoint, params = {} } = await req.json() as RequestBody;
+    console.log('Request details:', { endpoint, params });
     
     const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
     if (!rapidApiKey) {
+      console.error('RapidAPI key not found');
       throw new Error('RapidAPI key not configured');
     }
 
@@ -40,10 +43,12 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
+      console.error('API response not ok:', response.status, response.statusText);
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('API response received:', JSON.stringify(data, null, 2));
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
