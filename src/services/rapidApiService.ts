@@ -71,8 +71,8 @@ class RapidApiService {
   // Get races for a specific season
   async getSeasonRaces(season: number): Promise<HypraceRace[]> {
     try {
-      const data = await this.makeRequest('/races', { season: season.toString() });
-      return data.races || [];
+      const data = await this.makeRequest(`/seasons/${season}/grands-prix`);
+      return data.races || data.grandsPrix || [];
     } catch (error) {
       console.error(`Failed to fetch races for season ${season}:`, error);
       return [];
@@ -82,10 +82,7 @@ class RapidApiService {
   // Get race results for a specific race
   async getRaceResults(season: number, round: number): Promise<HypraceResult[]> {
     try {
-      const data = await this.makeRequest('/results', { 
-        season: season.toString(), 
-        round: round.toString() 
-      });
+      const data = await this.makeRequest(`/seasons/${season}/races/${round}/results`);
       return data.results || [];
     } catch (error) {
       console.error(`Failed to fetch race results for ${season}/${round}:`, error);
@@ -96,7 +93,7 @@ class RapidApiService {
   // Get drivers for a specific season
   async getSeasonDrivers(season: number): Promise<HypraceDriver[]> {
     try {
-      const data = await this.makeRequest('/drivers', { season: season.toString() });
+      const data = await this.makeRequest(`/seasons/${season}/drivers`);
       return data.drivers || [];
     } catch (error) {
       console.error(`Failed to fetch drivers for season ${season}:`, error);
@@ -107,8 +104,8 @@ class RapidApiService {
   // Get teams for a specific season
   async getSeasonTeams(season: number): Promise<HypraceTeam[]> {
     try {
-      const data = await this.makeRequest('/teams', { season: season.toString() });
-      return data.teams || [];
+      const data = await this.makeRequest(`/seasons/${season}/constructors`);
+      return data.constructors || data.teams || [];
     } catch (error) {
       console.error(`Failed to fetch teams for season ${season}:`, error);
       return [];
@@ -118,8 +115,8 @@ class RapidApiService {
   // Get driver standings for a specific season
   async getDriverStandings(season: number): Promise<HypraceDriver[]> {
     try {
-      const data = await this.makeRequest('/standings/drivers', { season: season.toString() });
-      return data.standings || [];
+      const data = await this.makeRequest(`/seasons/${season}/drivers-standings`);
+      return data.standings || data.driverStandings || [];
     } catch (error) {
       console.error(`Failed to fetch driver standings for season ${season}:`, error);
       return [];
@@ -129,8 +126,8 @@ class RapidApiService {
   // Get team standings for a specific season
   async getTeamStandings(season: number): Promise<HypraceTeam[]> {
     try {
-      const data = await this.makeRequest('/standings/teams', { season: season.toString() });
-      return data.standings || [];
+      const data = await this.makeRequest(`/seasons/${season}/constructors-standings`);
+      return data.standings || data.constructorStandings || [];
     } catch (error) {
       console.error(`Failed to fetch team standings for season ${season}:`, error);
       return [];
@@ -140,10 +137,7 @@ class RapidApiService {
   // Get qualifying results for a specific race
   async getQualifyingResults(season: number, round: number): Promise<HypraceResult[]> {
     try {
-      const data = await this.makeRequest('/qualifying', { 
-        season: season.toString(), 
-        round: round.toString() 
-      });
+      const data = await this.makeRequest(`/seasons/${season}/races/${round}/qualifying`);
       return data.results || [];
     } catch (error) {
       console.error(`Failed to fetch qualifying results for ${season}/${round}:`, error);
