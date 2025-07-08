@@ -34,7 +34,7 @@ const ErgastDataDemo = () => {
           F1 2025 Data Demo
         </h1>
         <p className="text-lg text-muted-foreground">
-          Live Formula 1 2025 season data from your Supabase database
+          Live Formula 1 2025 season data from hyprace API
         </p>
       </div>
 

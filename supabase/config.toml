@@ -1,1 +1,4 @@
 project_id = "wcgrdwsndxjkpfgcnbhx"
+
+[functions.rapidapi-f1]
+verify_jwt = false
