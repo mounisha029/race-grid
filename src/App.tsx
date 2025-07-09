@@ -25,7 +25,6 @@ const LazySocial = lazy(() => import("@/pages/Social"));
 const LazyLogin = lazy(() => import("@/pages/Login"));
 const LazyRegister = lazy(() => import("@/pages/Register"));
 const LazyAdmin = lazy(() => import("@/pages/Admin"));
-const LazyErgastDemo = lazy(() => import("@/pages/ErgastDemo"));
 const LazyNotFound = lazy(() => import("@/pages/NotFound"));
 
 // Create QueryClient instance
@@ -130,11 +129,6 @@ function App() {
                 <Route path="/analytics" element={
                   <LazyLoadWrapper>
                     <LazyAnalytics />
-                  </LazyLoadWrapper>
-                } />
-                <Route path="/ergast-demo" element={
-                  <LazyLoadWrapper>
-                    <LazyErgastDemo />
                   </LazyLoadWrapper>
                 } />
                 <Route path="/profile" element={
